@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { solveCSTRSeriesForward } from '../cstrSeries';
+import {
+  solveCSTRSeriesForward,
+  solveScaledCSTRSeriesForTargetConversion,
+} from '../cstrSeries';
 import { CSTRSeriesInput } from '../../../types';
 
 describe('CSTR Series Reactor', () => {
@@ -25,5 +28,13 @@ describe('CSTR Series Reactor', () => {
     expect(out.V_total).toBe(30);
     expect(out.tau_total).toBe(3);
     expect(out.a_out_final).toBe(out.stages[2].a_out);
+  });
+
+  it('scales a fixed-ratio train to reach a target conversion', () => {
+    const out = solveScaledCSTRSeriesForTargetConversion(input, 0.8);
+
+    expect(out).not.toBeNull();
+    expect(out?.X_final ?? 0).toBeCloseTo(0.8, 4);
+    expect(out?.tau_total ?? 0).toBeGreaterThan(0);
   });
 });

@@ -1,4 +1,3 @@
-import React from 'react';
 import { SolveMode } from '../types';
 
 interface SolveModeSelectorProps {
@@ -7,14 +6,23 @@ interface SolveModeSelectorProps {
   options?: { value: SolveMode; label: string }[];
 }
 
-export const SolveModeSelector: React.FC<SolveModeSelectorProps> = ({ 
+/**
+ * Renders the solve-mode selector used by reactor tabs.
+ *
+ * @param props The component props.
+ * @param props.mode The active solve mode.
+ * @param props.onChange Callback invoked when the mode changes.
+ * @param props.options The radio options to render.
+ * @returns A radio-group selector.
+ */
+export function SolveModeSelector({
   mode, 
   onChange,
   options = [
     { value: 'forward', label: 'Forward (Compute Output)' },
     { value: 'inverse', label: 'Target (Compute Size/Time)' }
   ]
-}) => {
+}: SolveModeSelectorProps) {
   return (
     <div className="mb-4">
       <label className="block text-sm font-medium text-gray-700 mb-2">Solve Mode</label>
@@ -35,4 +43,4 @@ export const SolveModeSelector: React.FC<SolveModeSelectorProps> = ({
       </div>
     </div>
   );
-};
+}

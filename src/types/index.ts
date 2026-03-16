@@ -1,61 +1,164 @@
-export type SolveMode = 'forward' | 'inverse' | 'compare';
+/**
+ * The available top-level tabs in the simulator UI.
+ */
+export type TabId =
+  | 'overview'
+  | 'batch'
+  | 'cstr'
+  | 'pfr'
+  | 'cstr-series'
+  | 'compare';
+
+/**
+ * The supported solve modes for a reactor input form.
+ */
+export type SolveMode = 'forward' | 'inverse';
+
+/**
+ * The supported reactor families in the simulator.
+ */
 export type ReactorType = 'batch' | 'cstr' | 'pfr' | 'cstr-series';
 
+/**
+ * Kinetic parameters for the Michaelis-Menten rate law.
+ */
 export interface KineticParams {
-  Vmax: number; // mol/(L·min)
-  KM: number;   // mol/L
-  kcat?: number; // 1/min (optional, used if mechanistic input is active)
-  e0?: number;   // mol/L (optional, used if mechanistic input is active)
+  Vmax: number;
+  KM: number;
+  kcat?: number;
+  e0?: number;
   useMechanistic: boolean;
 }
 
+/**
+ * Shared feed and kinetic inputs used by multiple reactor tabs.
+ */
+export interface SharedSimulatorInputs {
+  kinetics: KineticParams;
+  a_in: number;
+  v_dot: number;
+}
+
+/**
+ * UI state for the batch reactor form.
+ */
+export interface BatchFormState {
+  solveMode: SolveMode;
+  t: number;
+  X_target: number;
+}
+
+/**
+ * UI state for a continuous-reactor form.
+ */
+export interface ContinuousFormState {
+  solveMode: SolveMode;
+  tau: number;
+  X_target: number;
+}
+
+/**
+ * UI state for the CSTR-series form.
+ */
+export interface CSTRSeriesFormState {
+  volumes: number[];
+}
+
+/**
+ * The complete shared simulator state held by the app shell.
+ */
+export interface SimulatorState {
+  selectedPresetId: string;
+  shared: SharedSimulatorInputs;
+  batch: BatchFormState;
+  cstr: ContinuousFormState;
+  pfr: ContinuousFormState;
+  cstrSeries: CSTRSeriesFormState;
+}
+
+/**
+ * Shared base contract for reactor solver inputs.
+ */
 export interface BaseReactorInput {
   kinetics: KineticParams;
 }
 
+/**
+ * Inputs for the batch reactor model.
+ */
 export interface BatchInput extends BaseReactorInput {
-  a0: number; // mol/L
-  t?: number; // min (for forward solve)
-  X_target?: number; // (for inverse solve)
+  a0: number;
+  t?: number;
+  X_target?: number;
 }
 
+/**
+ * A trajectory point for the batch reactor.
+ */
+export interface BatchTrajectoryPoint {
+  t: number;
+  a: number;
+  X: number;
+}
+
+/**
+ * Outputs from the batch reactor model.
+ */
 export interface BatchOutput {
-  a_final: number; // mol/L
+  a_final: number;
   X: number;
-  t: number; // min
-  trajectory: { t: number; a: number; X: number }[];
+  t: number;
+  trajectory: BatchTrajectoryPoint[];
 }
 
+/**
+ * Inputs for CSTR and PFR models.
+ */
 export interface ContinuousInput extends BaseReactorInput {
-  a_in: number; // mol/L
-  v_dot: number; // L/min (throughput/flow rate)
-  V?: number; // L (for forward solve)
-  tau?: number; // min (for forward solve)
-  X_target?: number; // (for inverse solve)
-}
-
-export interface ContinuousOutput {
-  a_out: number; // mol/L
-  X: number;
-  V: number; // L
-  tau: number; // min
-}
-
-export interface CSTRSeriesInput extends BaseReactorInput {
   a_in: number;
   v_dot: number;
-  volumes: number[]; // Array of volumes for each stage
-  X_target?: number; // If solving for equal volumes to reach X
+  V?: number;
+  tau?: number;
+  X_target?: number;
 }
 
-export interface CSTRSeriesStageOutput {
-  stage: number;
-  V: number;
+/**
+ * Outputs from a continuous reactor model.
+ */
+export interface ContinuousOutput {
   a_out: number;
   X: number;
+  V: number;
   tau: number;
 }
 
+/**
+ * Inputs for a train of ideal CSTR stages in series.
+ */
+export interface CSTRSeriesInput extends BaseReactorInput {
+  a_in: number;
+  v_dot: number;
+  volumes: number[];
+  X_target?: number;
+}
+
+/**
+ * Per-stage results for a CSTR series calculation.
+ */
+export interface CSTRSeriesStageOutput {
+  stage: number;
+  V: number;
+  a_in: number;
+  a_out: number;
+  X: number;
+  X_stage: number;
+  tau: number;
+  tau_cumulative: number;
+}
+
+/**
+ * Aggregate results for a CSTR train.
+ */
 export interface CSTRSeriesOutput {
   stages: CSTRSeriesStageOutput[];
   a_out_final: number;
@@ -64,6 +167,82 @@ export interface CSTRSeriesOutput {
   tau_total: number;
 }
 
+/**
+ * Chart-ready profile point for the staged reactor visualization.
+ */
+export interface CSTRSeriesProfilePoint {
+  stage: number;
+  tauStart: number;
+  tauEnd: number;
+  aIn: number;
+  aOut: number;
+  overallConversion: number;
+  stageConversion: number;
+}
+
+/**
+ * A single point on the characteristic-time versus conversion comparison chart.
+ */
+export interface ComparisonCurvePoint {
+  X: number;
+  batchTime: number;
+  cstrTau: number;
+  pfrTau: number;
+  seriesTau: number | null;
+}
+
+/**
+ * A single point on a normalized decay comparison curve.
+ */
+export interface NormalizedDecayPoint {
+  tau: number;
+  cstr: number;
+  pfr: number;
+  cstrSeries: number | null;
+}
+
+/**
+ * A point on a Levenspiel curve.
+ */
+export interface LevenspielPoint {
+  a: number;
+  reciprocalRate: number;
+}
+
+/**
+ * A fill polygon used to visualize a Levenspiel area.
+ */
+export interface LevenspielAreaPolygon {
+  label: string;
+  x: number[];
+  y: number[];
+  fillColor: string;
+  lineColor: string;
+}
+
+/**
+ * Bundle of Levenspiel geometry for a fixed design basis.
+ */
+export interface LevenspielComparison {
+  curve: LevenspielPoint[];
+  pfrArea: LevenspielAreaPolygon;
+  cstrArea: LevenspielAreaPolygon;
+  cstrSeriesAreas: LevenspielAreaPolygon[];
+}
+
+/**
+ * A summary row used to compare multiple reactor performances at the same basis.
+ */
+export interface ReactorPerformanceDatum {
+  label: string;
+  a_out: number;
+  X: number;
+  tau: number;
+}
+
+/**
+ * Preset metadata and initial simulator values.
+ */
 export interface Preset {
   id: string;
   name: string;
@@ -71,5 +250,9 @@ export interface Preset {
   kinetics: KineticParams;
   a_in: number;
   v_dot: number;
+  batchTime: number;
+  tau: number;
   target_X: number;
+  cstrSeriesVolumes: number[];
+  preferredTab?: TabId;
 }

@@ -1,28 +1,24 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
+import { appContext, AppContextValue } from './contextStore';
 
-interface AppContextType {
-  isLectureMode: boolean;
-  toggleLectureMode: () => void;
+interface AppProviderProps {
+  children: ReactNode;
 }
 
-const AppContext = createContext<AppContextType | undefined>(undefined);
-
-export function AppProvider({ children }: { children: ReactNode }) {
+/**
+ * Provides cross-app UI state such as lecture mode.
+ *
+ * @param props The provider props.
+ * @param props.children The subtree that consumes the app context.
+ * @returns The context provider wrapping the given children.
+ */
+export function AppProvider({ children }: AppProviderProps) {
   const [isLectureMode, setIsLectureMode] = useState(false);
 
-  const toggleLectureMode = () => setIsLectureMode(prev => !prev);
+  const value: AppContextValue = {
+    isLectureMode,
+    toggleLectureMode: () => setIsLectureMode((previousValue) => !previousValue),
+  };
 
-  return (
-    <AppContext.Provider value={{ isLectureMode, toggleLectureMode }}>
-      {children}
-    </AppContext.Provider>
-  );
-}
-
-export function useAppContext() {
-  const context = useContext(AppContext);
-  if (!context) {
-    throw new Error('useAppContext must be used within an AppProvider');
-  }
-  return context;
+  return <appContext.Provider value={value}>{children}</appContext.Provider>;
 }

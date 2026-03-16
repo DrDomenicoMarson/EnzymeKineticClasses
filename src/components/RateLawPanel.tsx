@@ -1,11 +1,8 @@
-import React from 'react';
-import Plotly from 'plotly.js-basic-dist';
-import createPlotlyComponentModule from 'react-plotly.js/factory';
-const createPlotlyComponent = (createPlotlyComponentModule as any).default || createPlotlyComponentModule;
-const Plot = createPlotlyComponent(Plotly);
+import type { Data, Layout } from 'plotly.js';
+import { Plot } from './Plot';
 import { KineticParams } from '../types';
 import { generateRateCurve, rate } from '../lib/kinetics/michaelisMenten';
-import { useAppContext } from '../context/AppContext';
+import { useAppContext } from '../context/useAppContext';
 
 interface RateLawPanelProps {
   kinetics: KineticParams;
@@ -14,81 +11,93 @@ interface RateLawPanelProps {
   currentOutlet?: number;
 }
 
-export const RateLawPanel: React.FC<RateLawPanelProps> = ({ 
-  kinetics, 
+/**
+ * Displays the Michaelis-Menten rate-law curve and the current operating points.
+ *
+ * @param props The component props.
+ * @param props.kinetics The kinetic parameters used to build the curve.
+ * @param props.maxConcentration The concentration range to cover on the x-axis.
+ * @param props.currentInlet The optional inlet concentration marker.
+ * @param props.currentOutlet The optional outlet concentration marker.
+ * @returns A compact rate-law visualization panel.
+ */
+export function RateLawPanel({
+  kinetics,
   maxConcentration,
   currentInlet,
-  currentOutlet
-}) => {
+  currentOutlet,
+}: RateLawPanelProps) {
   const { isLectureMode } = useAppContext();
-  
-  // Extend curve slightly past max concentration for context
-  const max_a = Math.max(maxConcentration * 1.2, kinetics.KM * 3, 1.0);
-  const data = generateRateCurve(max_a, kinetics, 50);
 
-  const trace1 = {
-    x: data.map(d => d.a),
-    y: data.map(d => d.v),
-    mode: 'lines',
-    name: 'v(a)',
-    line: { color: '#2563eb', width: isLectureMode ? 3 : 2 },
-    hoverinfo: 'none'
-  };
-
-  const markersX = [];
-  const markersY = [];
-  const markerColors = [];
-  const markerTexts = [];
+  const maxA = Math.max(maxConcentration * 1.2, kinetics.KM * 3, 1.0);
+  const curve = generateRateCurve(maxA, kinetics, 50);
+  const markerX: number[] = [];
+  const markerY: number[] = [];
+  const markerColors: string[] = [];
+  const markerTexts: string[] = [];
 
   if (currentInlet !== undefined) {
-    markersX.push(currentInlet);
-    markersY.push(rate(currentInlet, kinetics));
+    markerX.push(currentInlet);
+    markerY.push(rate(currentInlet, kinetics));
     markerColors.push('#ef4444');
     markerTexts.push('Inlet');
   }
 
   if (currentOutlet !== undefined) {
-    markersX.push(currentOutlet);
-    markersY.push(rate(currentOutlet, kinetics));
+    markerX.push(currentOutlet);
+    markerY.push(rate(currentOutlet, kinetics));
     markerColors.push('#10b981');
     markerTexts.push('Outlet');
   }
 
-  const markersTrace = {
-    x: markersX,
-    y: markersY,
-    mode: 'markers+text',
-    text: markerTexts,
-    textposition: 'top center',
-    name: 'Operating Points',
-    marker: {
-      color: markerColors,
-      size: isLectureMode ? 12 : 8,
-      symbol: 'circle'
+  const data: Data[] = [
+    {
+      x: curve.map((point) => point.a),
+      y: curve.map((point) => point.v),
+      type: 'scatter',
+      mode: 'lines',
+      name: 'v(a)',
+      line: { color: '#2563eb', width: isLectureMode ? 3 : 2 },
+      hoverinfo: 'skip',
     },
-    hoverinfo: 'none'
+    {
+      x: markerX,
+      y: markerY,
+      type: 'scatter',
+      mode: 'text+markers',
+      text: markerTexts,
+      textposition: 'top center',
+      name: 'Operating Points',
+      marker: {
+        color: markerColors,
+        size: isLectureMode ? 12 : 8,
+        symbol: 'circle',
+      },
+      hoverinfo: 'skip',
+    },
+  ];
+
+  const layout: Partial<Layout> = {
+    margin: { t: 10, r: 10, b: 30, l: 40 },
+    xaxis: { title: { text: 'a (mol/L)' }, fixedrange: true },
+    yaxis: { title: { text: 'v(a)' }, fixedrange: true },
+    showlegend: false,
+    autosize: true,
+    font: { size: isLectureMode ? 14 : 11 },
   };
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 h-64 flex flex-col">
-      <h3 className="text-sm font-semibold text-gray-700 mb-1">Rate Law: v(a) vs a</h3>
-      <div className="flex-1 w-full relative">
-        {/* @ts-ignore */}
+    <div className="flex h-64 flex-col rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+      <h3 className="mb-1 text-sm font-semibold text-gray-700">Rate Law: v(a) vs a</h3>
+      <div className="relative w-full flex-1">
         <Plot
-          data={[trace1, markersTrace] as any}
-          layout={{
-            margin: { t: 10, r: 10, b: 30, l: 40 },
-            xaxis: { title: 'a (mol/L)', fixedrange: true },
-            yaxis: { title: 'v(a)', fixedrange: true },
-            showlegend: false,
-            autosize: true,
-            font: { size: isLectureMode ? 14 : 11 }
-          } as any}
-          useResizeHandler={true}
+          data={data}
+          layout={layout}
+          useResizeHandler
           style={{ width: '100%', height: '100%', position: 'absolute' }}
           config={{ displayModeBar: false }}
         />
       </div>
     </div>
   );
-};
+}

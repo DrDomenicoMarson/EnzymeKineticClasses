@@ -1,14 +1,20 @@
-import React from 'react';
-
-export type TabId = 'overview' | 'batch' | 'cstr' | 'pfr' | 'cstr-series' | 'compare';
+import { TabId } from '../types';
 
 interface TabNavigationProps {
   activeTab: TabId;
   onTabChange: (tab: TabId) => void;
 }
 
-export const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, onTabChange }) => {
-  const tabs = [
+/**
+ * Renders the top-level tab navigation for the simulator.
+ *
+ * @param props The component props.
+ * @param props.activeTab The currently selected tab.
+ * @param props.onTabChange Callback invoked when a tab is selected.
+ * @returns The tab-navigation bar.
+ */
+export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
+  const tabs: { id: TabId; label: string }[] = [
     { id: 'overview', label: 'Overview' },
     { id: 'batch', label: 'Batch Reactor' },
     { id: 'cstr', label: 'CSTR' },
@@ -23,7 +29,7 @@ export const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, onTabCh
         {tabs.map((tab) => (
           <button
             key={tab.id}
-            onClick={() => onTabChange(tab.id as TabId)}
+            onClick={() => onTabChange(tab.id)}
             className={`
               w-1/2 sm:w-auto text-center py-4 px-1 sm:px-6 border-b-2 font-medium text-sm transition-colors
               ${activeTab === tab.id
@@ -38,4 +44,4 @@ export const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, onTabCh
       </nav>
     </div>
   );
-};
+}

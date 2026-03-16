@@ -1,4 +1,3 @@
-import React from 'react';
 import { KineticParams } from '../types';
 import { getVmax } from '../lib/kinetics/michaelisMenten';
 import { formatWithUnit, Units } from '../lib/units/format';
@@ -8,7 +7,18 @@ interface KineticInputPanelProps {
   onChange: (newKinetics: KineticParams) => void;
 }
 
-export const KineticInputPanel: React.FC<KineticInputPanelProps> = ({ kinetics, onChange }) => {
+/**
+ * Renders the shared Michaelis-Menten kinetic input block.
+ *
+ * @param props The component props.
+ * @param props.kinetics The current kinetic parameter set.
+ * @param props.onChange Callback invoked when the kinetics change.
+ * @returns The kinetic-input panel.
+ */
+export function KineticInputPanel({
+  kinetics,
+  onChange,
+}: KineticInputPanelProps) {
   const handleToggle = () => {
     onChange({ ...kinetics, useMechanistic: !kinetics.useMechanistic });
   };
@@ -117,10 +127,15 @@ export const KineticInputPanel: React.FC<KineticInputPanelProps> = ({ kinetics, 
           {kinetics.useMechanistic ? (
             <div>Derived Vmax = {formatWithUnit(currentVmax, Units.RATE_V)}</div>
           ) : (
-            <div className="opacity-75 italic">Mechanistic mode disabled</div>
+            <div className="space-y-1">
+              <div>Stored Vmax = {formatWithUnit(kinetics.Vmax, Units.RATE_V)}</div>
+              <div className="opacity-75 italic">
+                Mechanistic fields remain available when you switch modes.
+              </div>
+            </div>
           )}
         </div>
       </div>
     </div>
   );
-};
+}

@@ -1,33 +1,47 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
-import { useAppContext } from '../context/AppContext';
+import { useAppContext } from '../context/useAppContext';
 
 interface DocumentationBlockProps {
   title: string;
   assumptions: string[];
-  equations: { notation: string, latex: string }[];
+  equations: { notation: string; latex: string }[];
   notes: string[];
 }
 
-export const DocumentationBlock: React.FC<DocumentationBlockProps> = ({
+/**
+ * Displays the assumptions, equations, and teaching notes for a tab.
+ *
+ * @param props The component props.
+ * @param props.title The documentation section title.
+ * @param props.assumptions The assumptions to list.
+ * @param props.equations The equations to render with KaTeX.
+ * @param props.notes The short interpretation notes to display.
+ * @returns A collapsible documentation block.
+ */
+export function DocumentationBlock({
   title, assumptions, equations, notes
-}) => {
+}: DocumentationBlockProps) {
   const { isLectureMode } = useAppContext();
-  const [isExpanded, setIsExpanded] = useState(!isLectureMode);
+  const [expandedInNormalMode, setExpandedInNormalMode] = useState(true);
+  const [expandedInLectureMode, setExpandedInLectureMode] = useState(false);
+  const isExpanded = isLectureMode ? expandedInLectureMode : expandedInNormalMode;
 
-  // Auto-collapse in lecture mode unless manually toggled
-  React.useEffect(() => {
+  const handleToggle = () => {
     if (isLectureMode) {
-      setIsExpanded(false);
+      setExpandedInLectureMode((previousValue) => !previousValue);
+      return;
     }
-  }, [isLectureMode]);
+
+    setExpandedInNormalMode((previousValue) => !previousValue);
+  };
 
   return (
     <div className="bg-white border text-sm text-gray-700 border-gray-200 rounded-lg shadow-sm overflow-hidden mb-6">
       <button 
         className="w-full px-4 py-3 bg-gray-50 flex justify-between items-center hover:bg-gray-100 transition-colors"
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={handleToggle}
       >
         <h3 className="text-base font-semibold text-gray-900">{title} — Documentation</h3>
         <span className="text-gray-500">{isExpanded ? '▼ Hide' : '▶ Show'}</span>
@@ -68,4 +82,4 @@ export const DocumentationBlock: React.FC<DocumentationBlockProps> = ({
       )}
     </div>
   );
-};
+}

@@ -1,7 +1,11 @@
-import React from 'react';
-import { useAppContext } from '../context/AppContext';
+import { useAppContext } from '../context/useAppContext';
 
-export const LectureModeToggle: React.FC = () => {
+/**
+ * Toggles the projector-friendly lecture mode.
+ *
+ * @returns The lecture-mode toggle button.
+ */
+export function LectureModeToggle() {
   const { isLectureMode, toggleLectureMode } = useAppContext();
 
   return (
@@ -16,4 +20,4 @@ export const LectureModeToggle: React.FC = () => {
       {isLectureMode ? 'Lecture Mode: ON' : 'Lecture Mode: OFF'}
     </button>
   );
-};
+}

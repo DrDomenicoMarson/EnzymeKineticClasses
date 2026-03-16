@@ -1,6 +1,5 @@
-import React from 'react';
 import { formatNumber } from '../lib/units/format';
-import { useAppContext } from '../context/AppContext';
+import { useAppContext } from '../context/useAppContext';
 
 interface ResultCardProps {
   title?: string;
@@ -12,7 +11,15 @@ interface ResultCardProps {
   }[];
 }
 
-export const ResultCard: React.FC<ResultCardProps> = ({ title = 'Results', results }) => {
+/**
+ * Displays a compact grid of highlighted numeric outputs.
+ *
+ * @param props The result-card props.
+ * @param props.title The card title.
+ * @param props.results The labeled values to display.
+ * @returns A styled result summary card.
+ */
+export function ResultCard({ title = 'Results', results }: ResultCardProps) {
   const { isLectureMode } = useAppContext();
 
   return (
@@ -31,4 +38,4 @@ export const ResultCard: React.FC<ResultCardProps> = ({ title = 'Results', resul
       </div>
     </div>
   );
-};
+}

@@ -1,129 +1,247 @@
-import { useState } from 'react';
-import { AppProvider } from './context/AppContext';
+import { lazy, Suspense, useState } from 'react';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { Layout } from './components/Layout';
-import { TabNavigation, TabId } from './components/TabNavigation';
 import { LectureModeToggle } from './components/LectureModeToggle';
-
+import { TabNavigation } from './components/TabNavigation';
+import { AppProvider } from './context/AppContext';
 import { OverviewTab } from './features/overview/OverviewTab';
+import {
+  createDefaultSimulatorState,
+  createSimulatorStateFromPreset,
+  defaultPresets,
+  getPresetById,
+} from './lib/presets/defaults';
+import {
+  BatchFormState,
+  CSTRSeriesFormState,
+  ContinuousFormState,
+  SharedSimulatorInputs,
+  SimulatorState,
+  TabId,
+} from './types';
 
-import { defaultPresets } from './lib/presets/defaults';
+const BatchTab = lazy(() =>
+  import('./features/reactors/BatchTab').then((module) => ({ default: module.BatchTab })),
+);
+const CSTRTab = lazy(() =>
+  import('./features/reactors/CSTRTab').then((module) => ({ default: module.CSTRTab })),
+);
+const PFRTab = lazy(() =>
+  import('./features/reactors/PFRTab').then((module) => ({ default: module.PFRTab })),
+);
+const CSTRSeriesTab = lazy(() =>
+  import('./features/reactors/CSTRSeriesTab').then((module) => ({
+    default: module.CSTRSeriesTab,
+  })),
+);
+const CompareTab = lazy(() =>
+  import('./features/comparison/CompareTab').then((module) => ({
+    default: module.CompareTab,
+  })),
+);
 
-// Lazy-load heavy Plotly-dependent tabs
-import React from 'react';
-const BatchTab = React.lazy(() => import('./features/reactors/BatchTab').then(m => ({ default: m.BatchTab })));
-const CSTRTab = React.lazy(() => import('./features/reactors/CSTRTab').then(m => ({ default: m.CSTRTab })));
-const PFRTab = React.lazy(() => import('./features/reactors/PFRTab').then(m => ({ default: m.PFRTab })));
+/**
+ * Applies a partial update to the simulator state while marking the preset as custom.
+ *
+ * @param previousState The current simulator state.
+ * @param nextState The updated simulator state.
+ * @returns The updated state with preset metadata cleared to custom.
+ */
+function markCustomPreset(
+  previousState: SimulatorState,
+  nextState: SimulatorState,
+): SimulatorState {
+  if (previousState.selectedPresetId === nextState.selectedPresetId) {
+    return { ...nextState, selectedPresetId: 'custom' };
+  }
 
-import { BatchInput, ContinuousInput } from './types';
+  return nextState;
+}
 
+/**
+ * Renders the stateful simulator shell.
+ *
+ * @returns The application content inside the shared provider.
+ */
 function AppContent() {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
+  const [simulatorState, setSimulatorState] = useState<SimulatorState>(
+    createDefaultSimulatorState,
+  );
 
-  const [kinetics, setKinetics] = useState(defaultPresets[0].kinetics);
-  const [a_in, setAIn] = useState(defaultPresets[0].a_in);
-  const [v_dot, setVDot] = useState(defaultPresets[0].v_dot);
+  const updateShared = (updates: Partial<SharedSimulatorInputs>) => {
+    setSimulatorState((previousState) =>
+      markCustomPreset(previousState, {
+        ...previousState,
+        shared: {
+          ...previousState.shared,
+          ...updates,
+          kinetics: updates.kinetics ?? previousState.shared.kinetics,
+        },
+      }),
+    );
+  };
 
-  const [batchInput, setBatchInput] = useState<BatchInput>({
-    kinetics,
-    a0: a_in,
-  });
+  const updateBatchState = (updates: Partial<BatchFormState>) => {
+    setSimulatorState((previousState) =>
+      markCustomPreset(previousState, {
+        ...previousState,
+        batch: { ...previousState.batch, ...updates },
+      }),
+    );
+  };
 
-  const [continuousInput, setContinuousInput] = useState<ContinuousInput>({
-    kinetics,
-    a_in,
-    v_dot,
-  });
+  const updateCSTRState = (updates: Partial<ContinuousFormState>) => {
+    setSimulatorState((previousState) =>
+      markCustomPreset(previousState, {
+        ...previousState,
+        cstr: { ...previousState.cstr, ...updates },
+      }),
+    );
+  };
 
-  const handleBatchChange = (newInput: BatchInput) => {
-    setBatchInput(newInput);
-    if (newInput.kinetics !== kinetics) setKinetics(newInput.kinetics);
-    if (newInput.a0 !== a_in) {
-      setAIn(newInput.a0);
-      setContinuousInput(prev => ({ ...prev, a_in: newInput.a0 }));
+  const updatePFRState = (updates: Partial<ContinuousFormState>) => {
+    setSimulatorState((previousState) =>
+      markCustomPreset(previousState, {
+        ...previousState,
+        pfr: { ...previousState.pfr, ...updates },
+      }),
+    );
+  };
+
+  const updateSeriesState = (updates: Partial<CSTRSeriesFormState>) => {
+    setSimulatorState((previousState) =>
+      markCustomPreset(previousState, {
+        ...previousState,
+        cstrSeries: { ...previousState.cstrSeries, ...updates },
+      }),
+    );
+  };
+
+  const handlePresetChange = (presetId: string) => {
+    if (!presetId) {
+      return;
+    }
+
+    const preset = getPresetById(presetId);
+    setSimulatorState(createSimulatorStateFromPreset(preset));
+    if (preset.preferredTab) {
+      setActiveTab(preset.preferredTab);
     }
   };
 
-  const handleContinuousChange = (newInput: ContinuousInput) => {
-    setContinuousInput(newInput);
-    if (newInput.kinetics !== kinetics) setKinetics(newInput.kinetics);
-    if (newInput.a_in !== a_in) {
-      setAIn(newInput.a_in);
-      setBatchInput(prev => ({ ...prev, a0: newInput.a_in }));
-    }
-    if (newInput.v_dot !== v_dot) setVDot(newInput.v_dot);
+  const handleReset = () => {
+    setSimulatorState(createDefaultSimulatorState());
+    setActiveTab('overview');
   };
 
-  const loadPreset = (presetId: string) => {
-    const preset = defaultPresets.find(p => p.id === presetId);
-    if (preset) {
-      setKinetics(preset.kinetics);
-      setAIn(preset.a_in);
-      setVDot(preset.v_dot);
-      
-      setBatchInput({
-        kinetics: preset.kinetics,
-        a0: preset.a_in,
-        X_target: preset.target_X,
-      });
-
-      setContinuousInput({
-        kinetics: preset.kinetics,
-        a_in: preset.a_in,
-        v_dot: preset.v_dot,
-        X_target: preset.target_X,
-      });
-
-      if (preset.id === 'cstr-vs-pfr') setActiveTab('compare');
-      else if (preset.id === 'cstr-series') setActiveTab('cstr-series');
-    }
-  };
+  const selectedPreset = defaultPresets.find(
+    (preset) => preset.id === simulatorState.selectedPresetId,
+  );
+  const presetSelectorValue = selectedPreset?.id ?? '';
 
   return (
     <Layout
       header={
-        <div className="flex items-center space-x-4">
-          <select 
-            className="border-gray-300 rounded p-2 text-sm text-gray-700 bg-white"
-            onChange={(e) => loadPreset(e.target.value)}
-            defaultValue="default"
+        <div className="flex flex-wrap items-center gap-3">
+          <select
+            className="rounded border border-gray-300 bg-white p-2 text-sm text-gray-700"
+            onChange={(event) => handlePresetChange(event.target.value)}
+            value={presetSelectorValue}
           >
-            <option disabled value="">-- Load Scenario Preset --</option>
-            {defaultPresets.map(p => (
-              <option key={p.id} value={p.id}>{p.name}</option>
+            <option value="">Custom scenario</option>
+            {defaultPresets.map((preset) => (
+              <option key={preset.id} value={preset.id}>
+                {preset.name}
+              </option>
             ))}
           </select>
+          <button
+            type="button"
+            onClick={handleReset}
+            className="rounded border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+          >
+            Reset to Default
+          </button>
           <LectureModeToggle />
         </div>
       }
     >
       <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
-      
-      <div className="mt-4">
-        {activeTab === 'overview' && <OverviewTab />}
-        
-        <React.Suspense fallback={<div className="p-8 text-center text-gray-500">Loading...</div>}>
-          {activeTab === 'batch' && <BatchTab input={batchInput} onInputChange={handleBatchChange} />}
-          {activeTab === 'cstr' && <CSTRTab input={continuousInput} onInputChange={handleContinuousChange} />}
-          {activeTab === 'pfr' && <PFRTab input={continuousInput} onInputChange={handleContinuousChange} />}
-        </React.Suspense>
-        
-        {activeTab === 'cstr-series' && (
-          <div className="p-8 text-center text-gray-500 bg-white rounded shadow-sm border">
-            <h2 className="text-xl font-bold mb-2">CSTR Series Tab</h2>
-            <p>Coming in Phase 3.</p>
-          </div>
-        )}
-        {activeTab === 'compare' && (
-          <div className="p-8 text-center text-gray-500 bg-white rounded shadow-sm border">
-            <h2 className="text-xl font-bold mb-2">Comparison & Levenspiel Plot</h2>
-            <p>Coming in Phase 4.</p>
-          </div>
-        )}
+
+      <div className="mb-4 rounded-lg border border-sky-100 bg-sky-50 p-4 text-sm text-sky-950">
+        <div className="font-semibold">
+          {selectedPreset?.name ?? 'Custom scenario'}
+        </div>
+        <div className="mt-1 text-sky-900">
+          {selectedPreset?.description ??
+            'Current inputs no longer match a saved preset, so the simulator is running a custom scenario.'}
+        </div>
       </div>
+
+      {activeTab === 'overview' && <OverviewTab />}
+
+      {activeTab !== 'overview' && (
+        <ErrorBoundary>
+          <Suspense
+            fallback={
+              <div className="rounded border border-gray-200 bg-white p-8 text-center text-gray-500 shadow-sm">
+                Loading tab...
+              </div>
+            }
+          >
+            {activeTab === 'batch' && (
+              <BatchTab
+                shared={simulatorState.shared}
+                state={simulatorState.batch}
+                onSharedChange={updateShared}
+                onStateChange={updateBatchState}
+              />
+            )}
+            {activeTab === 'cstr' && (
+              <CSTRTab
+                shared={simulatorState.shared}
+                state={simulatorState.cstr}
+                onSharedChange={updateShared}
+                onStateChange={updateCSTRState}
+              />
+            )}
+            {activeTab === 'pfr' && (
+              <PFRTab
+                shared={simulatorState.shared}
+                state={simulatorState.pfr}
+                onSharedChange={updateShared}
+                onStateChange={updatePFRState}
+              />
+            )}
+            {activeTab === 'cstr-series' && (
+              <CSTRSeriesTab
+                shared={simulatorState.shared}
+                state={simulatorState.cstrSeries}
+                onSharedChange={updateShared}
+                onStateChange={updateSeriesState}
+              />
+            )}
+            {activeTab === 'compare' && (
+              <CompareTab
+                shared={simulatorState.shared}
+                seriesState={simulatorState.cstrSeries}
+                onSharedChange={updateShared}
+                onSeriesChange={updateSeriesState}
+              />
+            )}
+          </Suspense>
+        </ErrorBoundary>
+      )}
     </Layout>
   );
 }
 
+/**
+ * The application root component.
+ *
+ * @returns The simulator wrapped in the shared app provider.
+ */
 function App() {
   return (
     <AppProvider>

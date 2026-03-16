@@ -1,6 +1,9 @@
-import React from 'react';
-
-export const OverviewTab: React.FC = () => {
+/**
+ * Renders the overview and quick-start content for the simulator.
+ *
+ * @returns The overview tab content.
+ */
+export function OverviewTab() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="bg-white rounded-lg shadow-sm border p-6">
@@ -41,4 +44,4 @@ export const OverviewTab: React.FC = () => {
       </div>
     </div>
   );
-};
+}

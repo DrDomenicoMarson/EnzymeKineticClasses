@@ -1,12 +1,20 @@
-import React, { ReactNode } from 'react';
-import { useAppContext } from '../context/AppContext';
+import { ReactNode } from 'react';
+import { useAppContext } from '../context/useAppContext';
 
 interface LayoutProps {
   children: ReactNode;
   header: ReactNode;
 }
 
-export const Layout: React.FC<LayoutProps> = ({ children, header }) => {
+/**
+ * Renders the application shell shared by all tabs.
+ *
+ * @param props The layout props.
+ * @param props.children The main page content.
+ * @param props.header The controls displayed in the header toolbar.
+ * @returns The simulator layout.
+ */
+export function Layout({ children, header }: LayoutProps) {
   const { isLectureMode } = useAppContext();
 
   return (
@@ -29,4 +37,4 @@ export const Layout: React.FC<LayoutProps> = ({ children, header }) => {
       </main>
     </div>
   );
-};
+}
