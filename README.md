@@ -19,17 +19,24 @@ An interactive, client-side web application for teaching enzyme reactor design, 
     npm test
     ```
 
-4.  **Build a single-file student handout:**
+4.  **Build the distributable outputs:**
     ```bash
-    npm run build:standalone
+    npm run build
     ```
-    This writes a self-contained HTML file to `dist/enzyme-reactor-simulator-standalone.html`.
+    This writes both the standard web bundle and the self-contained student handout
+    at `dist/enzyme-reactor-simulator-standalone.html`.
 
 ## Standalone Distribution
 
-The app is fully client-side, so you can distribute the generated
-`dist/enzyme-reactor-simulator-standalone.html` file directly to students.
-They can open it locally in a modern browser without running a server.
+The main distributable is the generated
+`dist/enzyme-reactor-simulator-standalone.html` file.
+Students can open it locally in a modern browser without running a server.
+
+If you only want to regenerate the standalone handout, you can still run:
+
+```bash
+npm run build:standalone
+```
 
 ## 📚 Documentation
 

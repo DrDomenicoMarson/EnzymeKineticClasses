@@ -5,8 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
-    "build:standalone": "tsc -b && vite build --mode standalone && node scripts/buildStandalone.mjs",
+    "build": "tsc -b && npm run build:web && npm run build:standalone:bundle && node scripts/buildStandalone.mjs",
+    "build:web": "vite build",
+    "build:standalone": "tsc -b && npm run build:standalone:bundle && node scripts/buildStandalone.mjs",
+    "build:standalone:bundle": "vite build --mode standalone",
     "test": "vitest run",
     "lint": "eslint .",
     "preview": "vite preview"
