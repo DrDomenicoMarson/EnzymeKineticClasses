@@ -23,7 +23,7 @@ Set up the Vite + React + TS project and implement all reactor math as pure func
 - Shared types using slide notation: `KineticParams`, `ReactorInput`, `ReactorOutput`
 - Substrate concentration: `a`, `a0`, `a_in`, `a_out`
 - Rate: `v(a)`
-- Flow rate: `V̇` (represented as `v_dot` in code)
+- Flow rate: `Q` (represented as `v_dot` in code)
 - Conversion: `X`
 - Residence time: `τ`
 
@@ -69,11 +69,11 @@ Set up the Vite + React + TS project and implement all reactor math as pure func
 
 ### Phase 2: Core UI Shell + Batch & Single Reactor Tabs
 
-Build the app shell (tabs, layout, lecture mode toggle) and implement the first three reactor tabs.
+Build the app shell (tabs, layout, presets/reset) and implement the first three reactor tabs.
 
 #### [NEW] `src/components/Layout.tsx`
 - Two-panel layout: controls (left) / plots (right)
-- Lecture-mode class toggling (larger fonts, reduced clutter)
+- Wide desktop container for 16:9 screens
 
 #### [NEW] `src/components/TabNavigation.tsx`
 - 6 tabs: Overview, Batch, CSTR, PFR, CSTR Series, Compare
@@ -98,9 +98,6 @@ Build the app shell (tabs, layout, lecture mode toggle) and implement the first 
 #### [NEW] `src/components/DocumentationBlock.tsx`
 - Collapsible sections: Assumptions, Equations (KaTeX, matching slides), Interpretation notes
 
-#### [NEW] `src/components/LectureModeToggle.tsx`
-- Toggle button; stores state in React context
-
 #### [NEW] `src/features/overview/OverviewTab.tsx`
 - Welcome/concepts page with app description and quick-start guide
 
@@ -111,7 +108,7 @@ Build the app shell (tabs, layout, lecture mode toggle) and implement the first 
 - Documentation block
 
 #### [NEW] `src/features/reactors/CSTRTab.tsx`
-- Controls: `a_in`, kinetics, `τ` (or `V̇`+`V`), or `X_target`
+- Controls: `a_in`, kinetics, `τ` (or `Q`+`V`), or `X_target`
 - Plots: `a_out` vs `τ`, `X` vs `τ`, operating point marker
 - Documentation block
 
@@ -120,10 +117,10 @@ Build the app shell (tabs, layout, lecture mode toggle) and implement the first 
 - Documentation block with PFR-specific notes
 
 #### [NEW] `src/App.tsx` / `src/main.tsx`
-- Wire up tabs, global state, presets, reset, lecture mode
+- Wire up tabs, global state, presets, reset
 
 #### [NEW] `src/index.css`
-- Design system: colors, typography, responsive layout, lecture-mode overrides
+- Design system: colors, typography, responsive wide-screen layout
 
 ---
 
@@ -152,12 +149,12 @@ Build the app shell (tabs, layout, lecture mode toggle) and implement the first 
 
 ---
 
-### Phase 5: Polish, Presets, Lecture Mode, Validation
+### Phase 5: Polish, Presets, Desktop Layout, Validation
 
 #### [MODIFY] Various files
 - Wire up all 6 presets with one-click loading
 - Global reset button
-- Lecture mode: auto-collapse docs, enlarge fonts/axes, simplify spacing
+- Widen the shell and rebalance the desktop layout for 16:9 screens
 - Input validation: non-negative guards, impossible-target messages
 - Cross-check numerical results against analytic limits
 - Final UI/CSS polish
@@ -187,7 +184,7 @@ I'll use the browser tool to:
 1. **Phase 2**: Navigate to each reactor tab, enter values, verify plots render and update reactively
 2. **Phase 3**: Add/remove CSTR stages, verify cascade calculation and comparison overlay
 3. **Phase 4**: Check Levenspiel plot geometry, verify τ-vs-X and normalized decay comparison curves
-4. **Phase 5**: Test all presets load correctly, lecture mode toggles visual changes, invalid inputs show messages
+4. **Phase 5**: Test all presets load correctly, the wider desktop layout is readable, and invalid inputs show messages
 
 ### Manual Verification (for you)
 
@@ -195,5 +192,5 @@ After Phase 5, I'll ask you to:
 1. Open the app locally (`npm run dev`)
 2. Try each preset and verify the numbers match your lecture expectations
 3. Verify the Levenspiel plot style matches your slides
-4. Toggle lecture mode on a projector or large display and confirm readability
+4. Open the app on a projector or 16:9 display and confirm the wider layout is readable
 5. Spot-check a few forward/inverse calculations against hand calculations or your slides

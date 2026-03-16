@@ -2,7 +2,6 @@ import type { Data, Layout } from 'plotly.js';
 import { Plot } from './Plot';
 import { KineticParams } from '../types';
 import { generateRateCurve, rate } from '../lib/kinetics/michaelisMenten';
-import { useAppContext } from '../context/useAppContext';
 
 interface RateLawPanelProps {
   kinetics: KineticParams;
@@ -27,8 +26,6 @@ export function RateLawPanel({
   currentInlet,
   currentOutlet,
 }: RateLawPanelProps) {
-  const { isLectureMode } = useAppContext();
-
   const maxA = Math.max(maxConcentration * 1.2, kinetics.KM * 3, 1.0);
   const curve = generateRateCurve(maxA, kinetics, 50);
   const markerX: number[] = [];
@@ -57,7 +54,7 @@ export function RateLawPanel({
       type: 'scatter',
       mode: 'lines',
       name: 'v(a)',
-      line: { color: '#2563eb', width: isLectureMode ? 3 : 2 },
+      line: { color: '#2563eb', width: 2 },
       hoverinfo: 'skip',
     },
     {
@@ -70,7 +67,7 @@ export function RateLawPanel({
       name: 'Operating Points',
       marker: {
         color: markerColors,
-        size: isLectureMode ? 12 : 8,
+        size: 8,
         symbol: 'circle',
       },
       hoverinfo: 'skip',
@@ -83,7 +80,7 @@ export function RateLawPanel({
     yaxis: { title: { text: 'v(a)' }, fixedrange: true },
     showlegend: false,
     autosize: true,
-    font: { size: isLectureMode ? 14 : 11 },
+    font: { size: 11 },
   };
 
   return (

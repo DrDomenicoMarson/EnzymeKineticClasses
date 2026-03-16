@@ -181,11 +181,10 @@ export interface CSTRSeriesProfilePoint {
 }
 
 /**
- * A single point on the characteristic-time versus conversion comparison chart.
+ * A single point on the residence-time versus conversion comparison chart.
  */
 export interface ComparisonCurvePoint {
   X: number;
-  batchTime: number;
   cstrTau: number;
   pfrTau: number;
   seriesTau: number | null;

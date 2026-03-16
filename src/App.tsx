@@ -1,9 +1,7 @@
 import { lazy, Suspense, useState } from 'react';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Layout } from './components/Layout';
-import { LectureModeToggle } from './components/LectureModeToggle';
 import { TabNavigation } from './components/TabNavigation';
-import { AppProvider } from './context/AppContext';
 import { OverviewTab } from './features/overview/OverviewTab';
 import {
   createDefaultSimulatorState,
@@ -163,7 +161,6 @@ function AppContent() {
           >
             Reset to Default
           </button>
-          <LectureModeToggle />
         </div>
       }
     >
@@ -240,14 +237,10 @@ function AppContent() {
 /**
  * The application root component.
  *
- * @returns The simulator wrapped in the shared app provider.
+ * @returns The simulator application.
  */
 function App() {
-  return (
-    <AppProvider>
-      <AppContent />
-    </AppProvider>
-  );
+  return <AppContent />;
 }
 
 export default App;

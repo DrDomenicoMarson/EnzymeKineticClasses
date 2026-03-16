@@ -132,8 +132,8 @@ export function CSTRSeriesTab({
   };
 
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-      <div className="space-y-6 lg:col-span-4">
+    <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
+      <div className="space-y-6 lg:col-span-4 xl:col-span-3">
         <KineticInputPanel
           kinetics={shared.kinetics}
           onChange={(kinetics) => onSharedChange({ kinetics })}
@@ -167,7 +167,7 @@ export function CSTRSeriesTab({
 
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700">
-                Flow Rate, V̇ <span className="text-xs text-gray-500">({Units.FLOW})</span>
+                Flow Rate, Q <span className="text-xs text-gray-500">({Units.FLOW})</span>
               </label>
               <input
                 type="number"
@@ -251,7 +251,7 @@ export function CSTRSeriesTab({
         />
       </div>
 
-      <div className="flex flex-col space-y-6 lg:col-span-8">
+      <div className="flex flex-col space-y-6 lg:col-span-8 xl:col-span-9">
         {output ? (
           <>
             <ResultCard
@@ -263,31 +263,35 @@ export function CSTRSeriesTab({
               ]}
             />
 
-            <div className="grid gap-6 xl:grid-cols-[1.7fr_1fr]">
-              <div className="min-h-[360px] rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+            <div className="grid gap-6 xl:grid-cols-[2fr_1fr]">
+              <div className="flex min-h-[360px] flex-col overflow-hidden rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
                 <h3 className="mb-2 text-lg font-semibold text-gray-800">
                   Stagewise Concentration / Conversion Profile
                 </h3>
-                <Plot
-                  data={profileData}
-                  layout={profileLayout}
-                  useResizeHandler
-                  style={{ width: '100%', height: '100%' }}
-                  config={{ displayModeBar: false }}
-                />
+                <div className="min-h-0 flex-1">
+                  <Plot
+                    data={profileData}
+                    layout={profileLayout}
+                    useResizeHandler
+                    style={{ width: '100%', height: '100%' }}
+                    config={{ displayModeBar: false }}
+                  />
+                </div>
               </div>
 
-              <div className="min-h-[360px] rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+              <div className="flex min-h-[360px] flex-col overflow-hidden rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
                 <h3 className="mb-2 text-lg font-semibold text-gray-800">
                   Final Performance at Same Total τ
                 </h3>
-                <Plot
-                  data={performanceData}
-                  layout={performanceLayout}
-                  useResizeHandler
-                  style={{ width: '100%', height: '100%' }}
-                  config={{ displayModeBar: false }}
-                />
+                <div className="min-h-0 flex-1">
+                  <Plot
+                    data={performanceData}
+                    layout={performanceLayout}
+                    useResizeHandler
+                    style={{ width: '100%', height: '100%' }}
+                    config={{ displayModeBar: false }}
+                  />
+                </div>
               </div>
             </div>
 

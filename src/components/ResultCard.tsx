@@ -1,5 +1,4 @@
 import { formatNumber } from '../lib/units/format';
-import { useAppContext } from '../context/useAppContext';
 
 interface ResultCardProps {
   title?: string;
@@ -20,18 +19,23 @@ interface ResultCardProps {
  * @returns A styled result summary card.
  */
 export function ResultCard({ title = 'Results', results }: ResultCardProps) {
-  const { isLectureMode } = useAppContext();
+  const gridClass =
+    results.length >= 4
+      ? 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-4'
+      : results.length === 3
+        ? 'grid-cols-1 md:grid-cols-3'
+        : 'grid-cols-1 sm:grid-cols-2';
 
   return (
-    <div className={`bg-blue-50 border border-blue-100 rounded-lg p-4 shadow-sm ${isLectureMode ? 'my-6' : 'my-4'}`}>
-      <h3 className={`font-bold text-blue-900 mb-3 ${isLectureMode ? 'text-xl' : 'text-lg'}`}>{title}</h3>
+    <div className="my-3 rounded-lg border border-blue-100 bg-blue-50 p-3 shadow-sm">
+      <h3 className="mb-2 text-lg font-semibold text-blue-900">{title}</h3>
       
-      <div className={`grid gap-4 ${results.length > 2 ? 'grid-cols-2' : 'grid-cols-1 sm:grid-cols-2'}`}>
+      <div className={`grid gap-3 ${gridClass}`}>
         {results.map((res, i) => (
-          <div key={i} className={`bg-white p-3 rounded shadow-sm border ${res.highlight ? 'border-blue-300 ring-1 ring-blue-300' : 'border-gray-100'}`}>
-            <div className="text-sm text-gray-500 font-medium">{res.label}</div>
-            <div className={`font-bold text-gray-900 ${isLectureMode ? 'text-3xl' : 'text-2xl mt-1'}`}>
-              {formatNumber(res.value)} <span className="text-base text-gray-500 font-normal">{res.unit}</span>
+          <div key={i} className={`rounded border bg-white p-3 shadow-sm ${res.highlight ? 'border-blue-300 ring-1 ring-blue-300' : 'border-gray-100'}`}>
+            <div className="text-sm font-medium text-gray-500">{res.label}</div>
+            <div className="mt-1 text-lg font-semibold text-gray-900 xl:text-xl">
+              {formatNumber(res.value)} <span className="text-sm font-normal text-gray-500">{res.unit}</span>
             </div>
           </div>
         ))}

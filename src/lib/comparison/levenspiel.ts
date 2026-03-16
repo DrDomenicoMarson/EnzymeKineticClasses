@@ -7,7 +7,6 @@ import {
   NormalizedDecayPoint,
   ReactorPerformanceDatum,
 } from '../../types';
-import { batchTimeForConversion } from '../reactors/batch';
 import { cstrTauForConversion, solveCSTRForward } from '../reactors/cstr';
 import {
   solveCSTRSeriesForward,
@@ -21,12 +20,12 @@ const CSTR_FILL = 'rgba(239, 68, 68, 0.18)';
 const SERIES_FILL = 'rgba(59, 130, 246, 0.12)';
 
 /**
- * Generates the characteristic-time comparison curve over conversion.
+ * Generates the residence-time comparison curve over conversion.
  *
  * @param input The shared series input that defines kinetics, feed, and stage ratios.
  * @param maxConversion The largest conversion to include on the chart.
  * @param steps The number of curve intervals to generate.
- * @returns Comparison points for Batch, CSTR, PFR, and the staged train.
+ * @returns Comparison points for a single CSTR, a PFR, and the staged train.
  */
 export function generateCharacteristicTimeCurve(
   input: CSTRSeriesInput,
@@ -41,7 +40,6 @@ export function generateCharacteristicTimeCurve(
 
     curve.push({
       X,
-      batchTime: batchTimeForConversion({ a0: input.a_in, kinetics: input.kinetics }, X),
       cstrTau: cstrTauForConversion(
         { a_in: input.a_in, kinetics: input.kinetics, v_dot: input.v_dot },
         X,

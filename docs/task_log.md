@@ -19,7 +19,7 @@
 - [x] Create Kinetic Input Panel and Solve Mode Selector
 - [x] Create Rate Law Panel and Result Card
 - [x] Create Documentation Block component
-- [x] Create Lecture Mode Toggle and Context
+- [x] Finalize a single desktop-first presentation mode
 - [x] Build Overview Tab
 - [x] Build Batch Tab
 - [x] Build CSTR Tab
@@ -33,9 +33,9 @@
 - [ ] Implement Levenspiel area math (`src/lib/comparison/levenspiel.ts`)
 - [ ] Build Compare Tab (tau/V vs X plot, Levenspiel plot, CSTR vs PFR decay plot)
 
-## Phase 5: Polish, Presets, Lecture Mode, Validation
+## Phase 5: Polish, Presets, Desktop Layout, Validation
 - [ ] Wire up all 6 presets
 - [ ] Implement global reset
 - [ ] Verify input validation (non-negative, impossible targets)
-- [ ] Polish UI/CSS
+- [ ] Polish UI/CSS for wide-screen use
 - [ ] Final Browser verification

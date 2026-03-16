@@ -6,7 +6,6 @@ import { RateLawPanel } from '../../components/RateLawPanel';
 import { ResultCard } from '../../components/ResultCard';
 import { SolveModeSelector } from '../../components/SolveModeSelector';
 import { ValidationNotice } from '../../components/ValidationNotice';
-import { useAppContext } from '../../context/useAppContext';
 import {
   generatePFRCurve,
   pfrTauForConversion,
@@ -45,7 +44,6 @@ export function PFRTab({
   onSharedChange,
   onStateChange,
 }: PFRTabProps) {
-  const { isLectureMode } = useAppContext();
   const validationMessages = validateContinuousForm(shared, state);
 
   const reactorInput: ContinuousInput = {
@@ -79,7 +77,7 @@ export function PFRTab({
             type: 'scatter',
             mode: 'lines',
             name: 'a vs τ',
-            line: { color: '#ef4444', width: isLectureMode ? 4 : 2 },
+            line: { color: '#ef4444', width: 2 },
           },
           {
             x: curve.map((point) => point.tau),
@@ -88,7 +86,7 @@ export function PFRTab({
             mode: 'lines',
             name: 'X vs τ',
             yaxis: 'y2',
-            line: { color: '#10b981', width: isLectureMode ? 4 : 2, dash: 'dash' },
+            line: { color: '#10b981', width: 2, dash: 'dash' },
           },
           {
             x: [output.tau],
@@ -96,7 +94,7 @@ export function PFRTab({
             type: 'scatter',
             mode: 'markers',
             name: 'Outlet Point (a)',
-            marker: { color: '#ef4444', size: isLectureMode ? 14 : 10, symbol: 'circle' },
+            marker: { color: '#ef4444', size: 10, symbol: 'circle' },
             hoverinfo: 'skip',
           },
           {
@@ -106,7 +104,7 @@ export function PFRTab({
             mode: 'markers',
             name: 'Outlet Point (X)',
             yaxis: 'y2',
-            marker: { color: '#10b981', size: isLectureMode ? 14 : 10, symbol: 'circle' },
+            marker: { color: '#10b981', size: 10, symbol: 'circle' },
             hoverinfo: 'skip',
           },
         ];
@@ -127,12 +125,12 @@ export function PFRTab({
     },
     legend: { x: 0.5, y: 1.1, xanchor: 'center', orientation: 'h' },
     autosize: true,
-    font: { size: isLectureMode ? 16 : 12 },
+    font: { size: 12 },
   };
 
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-      <div className="space-y-6 lg:col-span-4">
+    <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
+      <div className="space-y-6 lg:col-span-4 xl:col-span-3">
         <KineticInputPanel
           kinetics={shared.kinetics}
           onChange={(kinetics) => onSharedChange({ kinetics })}
@@ -168,7 +166,7 @@ export function PFRTab({
 
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700">
-                Flow Rate, V̇ <span className="text-xs text-gray-500">({Units.FLOW})</span>
+                Flow Rate, Q <span className="text-xs text-gray-500">({Units.FLOW})</span>
               </label>
               <input
                 type="number"
@@ -266,7 +264,7 @@ export function PFRTab({
         />
       </div>
 
-      <div className="flex flex-col space-y-6 lg:col-span-8">
+      <div className="flex flex-col space-y-6 lg:col-span-8 xl:col-span-9">
         {output ? (
           <>
             <ResultCard
@@ -288,17 +286,19 @@ export function PFRTab({
               ]}
             />
 
-            <div className="min-h-[400px] flex-1 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+            <div className="flex h-[420px] flex-col overflow-hidden rounded-lg border border-gray-200 bg-white p-4 shadow-sm xl:h-[460px]">
               <h3 className="mb-2 text-lg font-semibold text-gray-800">
                 Steady-State Profile along Tube
               </h3>
-              <Plot
-                data={plotData}
-                layout={plotLayout}
-                useResizeHandler
-                style={{ width: '100%', height: '100%' }}
-                config={{ displayModeBar: false }}
-              />
+              <div className="min-h-0 flex-1">
+                <Plot
+                  data={plotData}
+                  layout={plotLayout}
+                  useResizeHandler
+                  style={{ width: '100%', height: '100%' }}
+                  config={{ displayModeBar: false }}
+                />
+              </div>
             </div>
           </>
         ) : (

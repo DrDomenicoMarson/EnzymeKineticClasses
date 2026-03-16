@@ -6,7 +6,6 @@ import { RateLawPanel } from '../../components/RateLawPanel';
 import { ResultCard } from '../../components/ResultCard';
 import { SolveModeSelector } from '../../components/SolveModeSelector';
 import { ValidationNotice } from '../../components/ValidationNotice';
-import { useAppContext } from '../../context/useAppContext';
 import { solveBatchForward, solveBatchInverse } from '../../lib/reactors/batch';
 import { Units } from '../../lib/units/format';
 import { validateBatchForm } from '../../lib/validation';
@@ -40,7 +39,6 @@ export function BatchTab({
   onSharedChange,
   onStateChange,
 }: BatchTabProps) {
-  const { isLectureMode } = useAppContext();
   const validationMessages = validateBatchForm(shared, state);
 
   const batchInput: BatchInput = {
@@ -67,7 +65,7 @@ export function BatchTab({
             type: 'scatter',
             mode: 'lines',
             name: 'a(t)',
-            line: { color: '#ef4444', width: isLectureMode ? 4 : 2 },
+            line: { color: '#ef4444', width: 2 },
           },
           {
             x: output.trajectory.map((point) => point.t),
@@ -76,7 +74,7 @@ export function BatchTab({
             mode: 'lines',
             name: 'X(t)',
             yaxis: 'y2',
-            line: { color: '#10b981', width: isLectureMode ? 4 : 2, dash: 'dash' },
+            line: { color: '#10b981', width: 2, dash: 'dash' },
           },
         ];
 
@@ -96,12 +94,12 @@ export function BatchTab({
     },
     legend: { x: 0.5, y: 1.1, xanchor: 'center', orientation: 'h' },
     autosize: true,
-    font: { size: isLectureMode ? 16 : 12 },
+    font: { size: 12 },
   };
 
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-      <div className="space-y-6 lg:col-span-4">
+    <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
+      <div className="space-y-6 lg:col-span-4 xl:col-span-3">
         <KineticInputPanel
           kinetics={shared.kinetics}
           onChange={(kinetics) => onSharedChange({ kinetics })}
@@ -219,7 +217,7 @@ export function BatchTab({
         />
       </div>
 
-      <div className="flex flex-col space-y-6 lg:col-span-8">
+      <div className="flex flex-col space-y-6 lg:col-span-8 xl:col-span-9">
         {output ? (
           <>
             <ResultCard
@@ -240,15 +238,17 @@ export function BatchTab({
               ]}
             />
 
-            <div className="min-h-[400px] flex-1 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+            <div className="flex h-[420px] flex-col overflow-hidden rounded-lg border border-gray-200 bg-white p-4 shadow-sm xl:h-[460px]">
               <h3 className="mb-2 text-lg font-semibold text-gray-800">Trajectories</h3>
-              <Plot
-                data={plotData}
-                layout={plotLayout}
-                useResizeHandler
-                style={{ width: '100%', height: '100%' }}
-                config={{ displayModeBar: false }}
-              />
+              <div className="min-h-0 flex-1">
+                <Plot
+                  data={plotData}
+                  layout={plotLayout}
+                  useResizeHandler
+                  style={{ width: '100%', height: '100%' }}
+                  config={{ displayModeBar: false }}
+                />
+              </div>
             </div>
           </>
         ) : (

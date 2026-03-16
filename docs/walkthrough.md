@@ -4,11 +4,10 @@
 
 All Phase 2 UI components are implemented and verified working:
 
-- **Overview Tab** — Notation reference, Lecture Mode info, Presets info
+- **Overview Tab** — Notation reference, desktop-first layout guidance, Presets info
 - **Batch Reactor Tab** — Kinetic inputs, forward/inverse solve modes, a(t) & X(t) trajectory plots
 - **CSTR Tab** — a_out vs τ design curves, operating point markers, forward/inverse solve
 - **PFR Tab** — a_out vs τ design curves, operating point markers, forward/inverse solve
-- **Lecture Mode** — Toggle increases font sizes across all tabs
 - **Presets** — Dropdown loads different kinetic scenarios
 
 ## Key Bug Fix
@@ -27,8 +26,6 @@ Additionally, `React.lazy()` was added for the heavy Plotly-dependent tabs to pr
 ![Batch Reactor Tab](./assets/batch_reactor_tab_1773672605450.png)
 <!-- slide -->
 ![CSTR Tab](./assets/cstr_tab_1773672639777.png)
-<!-- slide -->
-![Lecture Mode ON](./assets/lecture_mode_on_1773672657872.png)
 ````
 
 ## Browser Recording

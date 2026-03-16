@@ -7,33 +7,5 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-/* Lecture mode overrides */
-.lecture-mode {
-  font-size: 1.15rem;
-}
-.lecture-mode h1 {
-  font-size: 2.5rem;
-}
-.lecture-mode h2 {
-  font-size: 2.25rem;
-}
-.lecture-mode h3 {
-  font-size: 1.75rem;
-}
-.lecture-mode .text-sm {
-  font-size: 1rem;
-}
-.lecture-mode .text-base {
-  font-size: 1.15rem;
-}
-.lecture-mode .text-lg {
-  font-size: 1.25rem;
-}
-.lecture-mode label.text-sm {
-  font-size: 1rem;
-}
-.lecture-mode .katex-display {
-  font-size: 1.5em;
+  background-color: #f9fafb;
 }

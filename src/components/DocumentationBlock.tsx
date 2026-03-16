@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
-import { useAppContext } from '../context/useAppContext';
 
 interface DocumentationBlockProps {
   title: string;
@@ -23,18 +22,10 @@ interface DocumentationBlockProps {
 export function DocumentationBlock({
   title, assumptions, equations, notes
 }: DocumentationBlockProps) {
-  const { isLectureMode } = useAppContext();
-  const [expandedInNormalMode, setExpandedInNormalMode] = useState(true);
-  const [expandedInLectureMode, setExpandedInLectureMode] = useState(false);
-  const isExpanded = isLectureMode ? expandedInLectureMode : expandedInNormalMode;
+  const [isExpanded, setIsExpanded] = useState(true);
 
   const handleToggle = () => {
-    if (isLectureMode) {
-      setExpandedInLectureMode((previousValue) => !previousValue);
-      return;
-    }
-
-    setExpandedInNormalMode((previousValue) => !previousValue);
+    setIsExpanded((previousValue) => !previousValue);
   };
 
   return (

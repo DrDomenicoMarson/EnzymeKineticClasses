@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:standalone": "tsc -b && vite build --mode standalone && node scripts/buildStandalone.mjs",
     "test": "vitest run",
     "lint": "eslint .",
     "preview": "vite preview"

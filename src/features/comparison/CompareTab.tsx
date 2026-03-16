@@ -69,14 +69,6 @@ export function CompareTab({
   const characteristicData: Data[] = [
     {
       x: characteristicCurve.map((point) => point.X),
-      y: characteristicCurve.map((point) => point.batchTime),
-      type: 'scatter',
-      mode: 'lines',
-      name: 'Batch (t)',
-      line: { color: '#7c3aed', width: 3 },
-    },
-    {
-      x: characteristicCurve.map((point) => point.X),
       y: characteristicCurve.map((point) => point.cstrTau),
       type: 'scatter',
       mode: 'lines',
@@ -108,7 +100,7 @@ export function CompareTab({
   const characteristicLayout: Partial<Layout> = {
     margin: { t: 20, r: 20, b: 50, l: 55 },
     xaxis: { title: { text: 'Conversion X (-)' }, range: [0, 1] },
-    yaxis: { title: { text: 'Characteristic Time / Residence Time (min)' } },
+    yaxis: { title: { text: 'Residence Time, τ (min)' } },
     legend: { orientation: 'h', x: 0.5, xanchor: 'center', y: 1.15 },
     autosize: true,
   };
@@ -125,6 +117,41 @@ export function CompareTab({
       line: { color: area.lineColor, width: 1.5 },
     })) ?? [];
 
+  const operatingPointRates = performance.map((row) => reciprocalRateAt(seriesInput, row.a_out));
+  const finiteLevenspielXValues =
+    levenspiel === null
+      ? []
+      : [
+          ...levenspiel.pfrArea.x,
+          ...levenspiel.cstrArea.x,
+          ...levenspiel.cstrSeriesAreas.flatMap((area) => area.x),
+          ...performance.map((row) => row.a_out),
+          shared.a_in,
+        ].filter((value) => Number.isFinite(value));
+  const finiteLevenspielYValues =
+    levenspiel === null
+      ? []
+      : [
+          ...levenspiel.pfrArea.y,
+          ...levenspiel.cstrArea.y,
+          ...levenspiel.cstrSeriesAreas.flatMap((area) => area.y),
+          ...operatingPointRates,
+        ].filter((value) => Number.isFinite(value) && value >= 0);
+  const levenspielXRange =
+    finiteLevenspielXValues.length === 0
+      ? undefined
+      : (() => {
+          const minValue = Math.min(...finiteLevenspielXValues);
+          const maxValue = Math.max(...finiteLevenspielXValues);
+          const span = Math.max(maxValue - minValue, 0.1);
+          const padding = span * 0.08;
+          return [Math.max(0, minValue - padding), maxValue + padding] as [number, number];
+        })();
+  const levenspielYRange =
+    finiteLevenspielYValues.length === 0
+      ? undefined
+      : [0, Math.max(Math.max(...finiteLevenspielYValues) * 1.12, 1)];
+
   const levenspielData: Data[] =
     levenspiel === null || baseOutput === null
       ? []
@@ -135,7 +162,7 @@ export function CompareTab({
             type: 'scatter',
             mode: 'lines',
             name: 'Kinetics: 1/v(a)',
-            line: { color: '#1f2937', width: 3 },
+            line: { color: '#1f2937', width: 2.5, dash: 'dot' },
           },
           {
             x: levenspiel.pfrArea.x,
@@ -160,12 +187,13 @@ export function CompareTab({
           ...seriesAreaTraces,
           {
             x: performance.map((row) => row.a_out),
-            y: performance.map((row) => reciprocalRateAt(seriesInput, row.a_out)),
+            y: operatingPointRates,
             type: 'scatter',
             mode: 'text+markers',
             name: 'Operating points',
             text: performance.map((row) => row.label),
             textposition: 'top center',
+            cliponaxis: false,
             marker: {
               size: 10,
               color: ['#2563eb', '#ef4444', '#10b981'],
@@ -175,8 +203,14 @@ export function CompareTab({
 
   const levenspielLayout: Partial<Layout> = {
     margin: { t: 20, r: 20, b: 50, l: 60 },
-    xaxis: { title: { text: 'Substrate Concentration, a' } },
-    yaxis: { title: { text: 'Reciprocal Rate, 1/v(a)' } },
+    xaxis: {
+      title: { text: 'Substrate Concentration, a' },
+      range: levenspielXRange,
+    },
+    yaxis: {
+      title: { text: 'Reciprocal Rate, 1/v(a)' },
+      range: levenspielYRange,
+    },
     legend: { orientation: 'h', x: 0.5, xanchor: 'center', y: 1.18 },
     autosize: true,
   };
@@ -242,8 +276,8 @@ export function CompareTab({
   };
 
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-      <div className="space-y-6 lg:col-span-4">
+    <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
+      <div className="space-y-6 lg:col-span-4 xl:col-span-3">
         <KineticInputPanel
           kinetics={shared.kinetics}
           onChange={(kinetics) => onSharedChange({ kinetics })}
@@ -277,7 +311,7 @@ export function CompareTab({
 
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700">
-                Flow Rate, V̇ <span className="text-xs text-gray-500">({Units.FLOW})</span>
+                Flow Rate, Q <span className="text-xs text-gray-500">({Units.FLOW})</span>
               </label>
               <input
                 type="number"
@@ -340,7 +374,7 @@ export function CompareTab({
         <DocumentationBlock
           title="Reactor Comparison"
           assumptions={[
-            'Batch time t and continuous-reactor residence time τ are shown on a shared characteristic-time axis.',
+            'The main comparison curve reports residence time τ for continuous-reactor designs only.',
             'The CSTR-train comparison curve scales the currently selected volume ratios uniformly.',
             'Levenspiel areas are shown in concentration space using the lecture notation 1 / v(a).',
           ]}
@@ -366,7 +400,7 @@ export function CompareTab({
         />
       </div>
 
-      <div className="flex flex-col space-y-6 lg:col-span-8">
+      <div className="flex flex-col space-y-6 lg:col-span-8 xl:col-span-9">
         {baseOutput ? (
           <>
             <ResultCard
@@ -379,43 +413,49 @@ export function CompareTab({
               ]}
             />
 
-            <div className="min-h-[360px] rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+            <div className="flex min-h-[360px] flex-col overflow-hidden rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
               <h3 className="mb-2 text-lg font-semibold text-gray-800">
-                Required Characteristic Time vs Conversion
+                Required Residence Time vs Conversion
               </h3>
-              <Plot
-                data={characteristicData}
-                layout={characteristicLayout}
-                useResizeHandler
-                style={{ width: '100%', height: '100%' }}
-                config={{ displayModeBar: false }}
-              />
+              <div className="min-h-0 flex-1">
+                <Plot
+                  data={characteristicData}
+                  layout={characteristicLayout}
+                  useResizeHandler
+                  style={{ width: '100%', height: '100%' }}
+                  config={{ displayModeBar: false }}
+                />
+              </div>
             </div>
 
-            <div className="min-h-[420px] rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+            <div className="flex min-h-[420px] flex-col overflow-hidden rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
               <h3 className="mb-2 text-lg font-semibold text-gray-800">
                 Levenspiel Comparison
               </h3>
-              <Plot
-                data={levenspielData}
-                layout={levenspielLayout}
-                useResizeHandler
-                style={{ width: '100%', height: '100%' }}
-                config={{ displayModeBar: false }}
-              />
+              <div className="min-h-0 flex-1">
+                <Plot
+                  data={levenspielData}
+                  layout={levenspielLayout}
+                  useResizeHandler
+                  style={{ width: '100%', height: '100%' }}
+                  config={{ displayModeBar: false }}
+                />
+              </div>
             </div>
 
-            <div className="min-h-[360px] rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+            <div className="flex min-h-[360px] flex-col overflow-hidden rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
               <h3 className="mb-2 text-lg font-semibold text-gray-800">
                 Normalized Outlet Concentration Decay
               </h3>
-              <Plot
-                data={normalizedDecayData}
-                layout={normalizedDecayLayout}
-                useResizeHandler
-                style={{ width: '100%', height: '100%' }}
-                config={{ displayModeBar: false }}
-              />
+              <div className="min-h-0 flex-1">
+                <Plot
+                  data={normalizedDecayData}
+                  layout={normalizedDecayLayout}
+                  useResizeHandler
+                  style={{ width: '100%', height: '100%' }}
+                  config={{ displayModeBar: false }}
+                />
+              </div>
             </div>
           </>
         ) : (

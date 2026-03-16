@@ -176,16 +176,10 @@ Each reactor tab should share a common layout pattern:
 - **assumptions / equations / notes** block
 
 ### Layout recommendation
-For normal mode:
 - left: controls/documentation
 - right: plots/results
-
-For lecture mode:
-- larger controls
-- larger fonts
-- simplified spacing
-- reduced visual clutter
-- prioritize the main plots and key numbers
+- use generous horizontal space on wide desktop / projector screens
+- prioritize the main plots and key numbers without adding multiple presentation modes
 
 ---
 
@@ -460,20 +454,15 @@ Requirements:
 
 ---
 
-## 15. Lecture Mode
+## 15. Desktop Presentation Readability
 
-Implement a dedicated **Lecture Mode** toggle.
+Use a single default presentation mode that is already readable on projector and 16:9 desktop screens.
 
 Requirements:
-- larger text and controls
-- reduced clutter
-- prioritize major plots and key outputs
-- improved readability on projectors
-- preserve full simulator correctness; this is a presentation mode, not a separate app
-
-Optional improvements:
-- collapse long documentation sections automatically in lecture mode
-- enlarge axis labels and legend text
+- larger plots should be prioritized in the default layout
+- controls and documentation should remain visible without feeling cramped
+- the app should take advantage of wide screens rather than centering everything in a narrow column
+- preserve full simulator correctness; readability is achieved through the base layout, not a separate mode
 
 ---
 
@@ -569,7 +558,7 @@ Recommendation:
 The coding agent should produce:
 1. a working React + TypeScript + Vite app
 2. clear source organization
-3. readable UI with lecture mode
+3. readable desktop-first UI
 4. presets and reset button
 5. all required plots and tabs
 6. robust input validation
@@ -595,7 +584,7 @@ The implementation is successful if all of the following are true:
 5. The app includes a dedicated **comparison tab** with a **Levenspiel-style view**.
 6. The app includes a small **rate-law panel** showing `r(S)`.
 7. Each reactor tab includes **assumptions**, **governing equations**, and **short interpretation notes**.
-8. The app includes **lecture mode**, **presets**, and **reset**.
+8. The app includes **presets** and **reset**.
 9. The UI is readable and practical for **live lecture demo**.
 10. The implementation is **numerically stable** for normal classroom parameter ranges.
 
@@ -612,4 +601,3 @@ When tradeoffs arise, prioritize in this order:
 5. visual polish
 
 Do not sacrifice correctness or conceptual clarity for decorative UI.
-

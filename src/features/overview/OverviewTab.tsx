@@ -5,7 +5,7 @@
  */
 export function OverviewTab() {
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="space-y-6">
       <div className="bg-white rounded-lg shadow-sm border p-6">
         <h2 className="text-2xl font-bold text-gray-900 mb-4">Enzyme Reactor Simulator</h2>
         <p className="text-gray-700 leading-relaxed mb-4">
@@ -19,7 +19,7 @@ export function OverviewTab() {
           <li><strong>a</strong> — Substrate concentration (mol/L)</li>
           <li><strong>v(a)</strong> — Reaction rate (mol/L·min)</li>
           <li><strong>X</strong> — Conversion (-)</li>
-          <li><strong>V̇</strong> — Volumetric flow rate (L/min)</li>
+          <li><strong>Q</strong> — Volumetric flow rate (L/min)</li>
           <li><strong>τ</strong> — Residence time (min)</li>
           <li><strong>KM, Vmax</strong> — Michaelis-Menten kinetic parameters</li>
         </ul>
@@ -27,10 +27,10 @@ export function OverviewTab() {
 
       <div className="grid md:grid-cols-2 gap-6">
         <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h3 className="text-lg font-bold text-gray-900 border-b pb-2 mb-3">Live Lecture Mode</h3>
+          <h3 className="text-lg font-bold text-gray-900 border-b pb-2 mb-3">Desktop-First Layout</h3>
           <p className="text-sm text-gray-700 mb-4">
-            Toggle <strong>Lecture Mode</strong> in the top right for a projector-friendly view. 
-            This increases font sizes, prioritizes key visual plots, and auto-collapses detailed documentation.
+            The interface is optimized for wide desktop and projector screens, with room for control panels,
+            plots, and engineering notes to coexist without hiding key information.
           </p>
         </div>
 
