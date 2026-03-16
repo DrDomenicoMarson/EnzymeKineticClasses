@@ -1,3 +1,4 @@
+import type { ChangeEvent } from 'react';
 import { KineticParams } from '../types';
 import { getVmax } from '../lib/kinetics/michaelisMenten';
 import { formatWithUnit, Units } from '../lib/units/format';
@@ -23,41 +24,52 @@ export function KineticInputPanel({
     onChange({ ...kinetics, useMechanistic: !kinetics.useMechanistic });
   };
 
-  const handleVmaxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange({ ...kinetics, Vmax: parseFloat(e.target.value) || 0 });
+  const handleVmaxChange = (event: ChangeEvent<HTMLInputElement>) => {
+    onChange({ ...kinetics, Vmax: parseFloat(event.target.value) || 0 });
   };
 
-  const handleKMChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange({ ...kinetics, KM: parseFloat(e.target.value) || 0 });
+  const handleKMChange = (event: ChangeEvent<HTMLInputElement>) => {
+    onChange({ ...kinetics, KM: parseFloat(event.target.value) || 0 });
   };
 
-  const handleKcatChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange({ ...kinetics, kcat: parseFloat(e.target.value) || 0 });
+  const handleKcatChange = (event: ChangeEvent<HTMLInputElement>) => {
+    onChange({ ...kinetics, kcat: parseFloat(event.target.value) || 0 });
   };
 
-  const handleE0Change = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange({ ...kinetics, e0: parseFloat(e.target.value) || 0 });
+  const handleE0Change = (event: ChangeEvent<HTMLInputElement>) => {
+    onChange({ ...kinetics, e0: parseFloat(event.target.value) || 0 });
   };
 
   const currentVmax = getVmax(kinetics);
 
   return (
     <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-4">
-      <div className="flex justify-between items-center mb-4 border-b pb-2">
+      <div className="mb-4 flex items-start justify-between gap-4 border-b pb-2">
         <h3 className="text-lg font-semibold text-gray-800">Kinetics (Michaelis-Menten)</h3>
-        <label className="flex items-center space-x-2 cursor-pointer text-sm text-gray-600">
-          <span>Mechanistic (kcat, e0)</span>
-          <div className="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
-            <input 
-              type="checkbox" 
-              className="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer mt-0.5 ml-0.5" 
-              checked={kinetics.useMechanistic}
-              onChange={handleToggle}
-              style={{ right: kinetics.useMechanistic ? '0' : 'auto', transform: kinetics.useMechanistic ? 'translateX(100%)' : 'none', zIndex: 10, borderColor: kinetics.useMechanistic ? '#3b82f6': '#d1d5db', backgroundColor: kinetics.useMechanistic ? '#3b82f6' : '#d1d5db' }}
+        <div className="flex items-center gap-3">
+          <span className="text-right text-sm text-gray-600">
+            Input Mode
+            <span className="block text-gray-500">
+              {kinetics.useMechanistic ? 'kcat, e0' : 'Vmax'}
+            </span>
+          </span>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={kinetics.useMechanistic}
+            aria-label="Toggle mechanistic kinetic inputs"
+            onClick={handleToggle}
+            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full px-0.5 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+              kinetics.useMechanistic ? 'bg-blue-500' : 'bg-gray-300'
+            }`}
+          >
+            <span
+              className={`inline-block h-5 w-5 rounded-full bg-white shadow-sm ring-1 ring-black/5 transition-transform ${
+                kinetics.useMechanistic ? 'translate-x-5' : 'translate-x-0'
+              }`}
             />
-            <div className={`toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer ${kinetics.useMechanistic ? 'bg-blue-200' : ''}`}></div>
-          </div>
-        </label>
+          </button>
+        </div>
       </div>
 
       <div className="space-y-4">
@@ -122,19 +134,11 @@ export function KineticInputPanel({
           />
         </div>
 
-        {/* Derived read-only values */}
-        <div className="bg-gray-50 p-3 rounded text-sm text-gray-600 mt-2">
-          {kinetics.useMechanistic ? (
-            <div>Derived Vmax = {formatWithUnit(currentVmax, Units.RATE_V)}</div>
-          ) : (
-            <div className="space-y-1">
-              <div>Stored Vmax = {formatWithUnit(kinetics.Vmax, Units.RATE_V)}</div>
-              <div className="opacity-75 italic">
-                Mechanistic fields remain available when you switch modes.
-              </div>
-            </div>
-          )}
-        </div>
+        {kinetics.useMechanistic ? (
+          <div className="mt-2 rounded bg-gray-50 p-3 text-sm text-gray-600">
+            Derived Vmax = {formatWithUnit(currentVmax, Units.RATE_V)}
+          </div>
+        ) : null}
       </div>
     </div>
   );
