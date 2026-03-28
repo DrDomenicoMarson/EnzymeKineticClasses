@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import type { Data, Layout } from 'plotly.js';
 import { DocumentationBlock } from '../../components/DocumentationBlock';
 import { KineticInputPanel } from '../../components/KineticInputPanel';
 import { Plot } from '../../components/Plot';
 import { ResultCard } from '../../components/ResultCard';
+import { SolveModeSelector } from '../../components/SolveModeSelector';
 import { ValidationNotice } from '../../components/ValidationNotice';
 import {
   buildLevenspielComparison,
@@ -43,6 +45,9 @@ export function CompareTab({
   onSharedChange,
   onSeriesChange,
 }: CompareTabProps) {
+  const [compareMode, setCompareMode] = useState<'fixed_tau' | 'target_conversion'>('fixed_tau');
+  const [compareTargetX, setCompareTargetX] = useState(0.9);
+
   const validationMessages = validateCSTRSeriesForm(shared, seriesState);
   const seriesInput: CSTRSeriesInput = {
     kinetics: shared.kinetics,
@@ -51,10 +56,12 @@ export function CompareTab({
     volumes: seriesState.volumes,
   };
 
+  const isTargetMode = compareMode === 'target_conversion';
+
   const baseOutput =
     validationMessages.length === 0 ? solveCSTRSeriesForward(seriesInput) : null;
   const performance =
-    validationMessages.length === 0 ? calculateEquivalentPerformance(seriesInput) : [];
+    validationMessages.length === 0 ? calculateEquivalentPerformance(seriesInput, isTargetMode ? compareTargetX : undefined) : [];
   const characteristicCurve =
     validationMessages.length === 0
       ? generateCharacteristicTimeCurve(seriesInput, 0.98, 55)
@@ -64,7 +71,7 @@ export function CompareTab({
       ? generateNormalizedDecayCurve(seriesInput, Math.max(baseOutput.tau_total * 1.6, 8), 60)
       : [];
   const levenspiel =
-    validationMessages.length === 0 ? buildLevenspielComparison(seriesInput) : null;
+    validationMessages.length === 0 ? buildLevenspielComparison(seriesInput, isTargetMode ? compareTargetX : undefined) : null;
 
   const characteristicData: Data[] = [
     {
@@ -291,7 +298,35 @@ export function CompareTab({
             </p>
           </div>
 
+          <SolveModeSelector
+            mode={compareMode as any}
+            onChange={(mode) => setCompareMode(mode as any)}
+            options={[
+              { value: 'fixed_tau' as any, label: 'Fixed Configuration' },
+              { value: 'target_conversion' as any, label: 'Target Conversion' },
+            ]}
+          />
+
           <div className="space-y-4">
+            {compareMode === 'target_conversion' && (
+              <div className="rounded-md border border-blue-200 bg-blue-50 p-3">
+                <label className="mb-1 block text-sm font-medium text-gray-900">
+                  Target Conversion, X <span className="text-xs text-gray-500">(-)</span>
+                </label>
+                <input
+                  type="number"
+                  step="0.05"
+                  min="0"
+                  max="0.999"
+                  value={compareTargetX}
+                  onChange={(event) =>
+                    setCompareTargetX(Number.parseFloat(event.target.value) || 0)
+                  }
+                  className="w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-blue-500"
+                />
+              </div>
+            )}
+
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700">
                 Inlet Concentration, a_in{' '}
@@ -347,9 +382,9 @@ export function CompareTab({
               {seriesState.volumes.map((volume, stageIndex) => (
                 <div
                   key={`compare-volume-${stageIndex}`}
-                  className="grid grid-cols-[1fr_2fr] items-center gap-3"
+                  className={`grid grid-cols-[1fr_2fr] items-center gap-3 ${isTargetMode ? 'opacity-70' : ''}`}
                 >
-                  <label className="text-sm text-gray-700">Stage {stageIndex + 1}</label>
+                  <label className="text-sm text-gray-700">Stage {stageIndex + 1} {isTargetMode && 'Ratio'}</label>
                   <input
                     type="number"
                     step="0.1"
@@ -404,12 +439,12 @@ export function CompareTab({
         {baseOutput ? (
           <>
             <ResultCard
-              title="Current Fixed-Basis Comparison"
+              title={isTargetMode ? "Performance at Identical Target Conversion" : "Performance at Fixed Baseline Basis"}
               results={[
-                { label: 'Configured Train τ', value: baseOutput.tau_total, unit: Units.TIME },
-                { label: 'Train X', value: performance[0]?.X ?? 0, unit: Units.DIMENSIONLESS },
-                { label: 'Single CSTR X', value: performance[1]?.X ?? 0, unit: Units.DIMENSIONLESS },
-                { label: 'PFR X', value: performance[2]?.X ?? 0, unit: Units.DIMENSIONLESS },
+                { label: 'Train τ', value: performance[0]?.tau ?? 0, unit: Units.TIME, highlight: isTargetMode },
+                { label: 'Single CSTR τ', value: performance[1]?.tau ?? 0, unit: Units.TIME, highlight: isTargetMode },
+                { label: 'PFR τ', value: performance[2]?.tau ?? 0, unit: Units.TIME, highlight: isTargetMode },
+                { label: 'Eval Conversion X', value: performance[0]?.X ?? 0, unit: Units.DIMENSIONLESS },
               ]}
             />
 

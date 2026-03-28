@@ -109,16 +109,34 @@ export function generateNormalizedDecayCurve(
  */
 export function calculateEquivalentPerformance(
   input: CSTRSeriesInput,
+  targetX?: number,
 ): ReactorPerformanceDatum[] {
-  const seriesOutput = solveCSTRSeriesForward(input);
-  const cstrOutput = solveCSTRForward(
-    { a_in: input.a_in, kinetics: input.kinetics, v_dot: input.v_dot },
-    seriesOutput.tau_total,
-  );
-  const pfrOutput = solvePFRForward(
-    { a_in: input.a_in, kinetics: input.kinetics, v_dot: input.v_dot },
-    seriesOutput.tau_total,
-  );
+  let seriesOutput;
+  let cstrOutput;
+  let pfrOutput;
+
+  if (targetX !== undefined) {
+    const safeTarget = Math.max(0, Math.min(targetX, 0.999));
+    const targetAOut = input.a_in * (1 - safeTarget);
+    
+    seriesOutput = solveScaledCSTRSeriesForTargetConversion(input, safeTarget) ?? solveCSTRSeriesForward(input);
+    
+    const cstrTau = cstrTauForConversion({kinetics: input.kinetics, a_in: input.a_in, v_dot: input.v_dot}, safeTarget);
+    cstrOutput = { a_out: targetAOut, X: safeTarget, tau: cstrTau };
+    
+    const pfrTau = pfrTauForConversion({kinetics: input.kinetics, a_in: input.a_in, v_dot: input.v_dot}, safeTarget);
+    pfrOutput = { a_out: targetAOut, X: safeTarget, tau: pfrTau };
+  } else {
+    seriesOutput = solveCSTRSeriesForward(input);
+    cstrOutput = solveCSTRForward(
+      { a_in: input.a_in, kinetics: input.kinetics, v_dot: input.v_dot },
+      seriesOutput.tau_total,
+    );
+    pfrOutput = solvePFRForward(
+      { a_in: input.a_in, kinetics: input.kinetics, v_dot: input.v_dot },
+      seriesOutput.tau_total,
+    );
+  }
 
   return [
     {
@@ -150,25 +168,38 @@ export function calculateEquivalentPerformance(
  */
 export function buildLevenspielComparison(
   input: CSTRSeriesInput,
+  targetX?: number,
 ): LevenspielComparison {
-  const seriesOutput = solveCSTRSeriesForward(input);
-  const cstrOutput = solveCSTRForward(
-    { a_in: input.a_in, kinetics: input.kinetics, v_dot: input.v_dot },
-    seriesOutput.tau_total,
-  );
-  const pfrOutput = solvePFRForward(
-    { a_in: input.a_in, kinetics: input.kinetics, v_dot: input.v_dot },
-    seriesOutput.tau_total,
-  );
+  let seriesOutput;
+  let pfrOut: number;
+  let cstrOut: number;
+
+  if (targetX !== undefined) {
+    const safeTarget = Math.max(0, Math.min(targetX, 0.999));
+    const targetAOut = input.a_in * (1 - safeTarget);
+    seriesOutput = solveScaledCSTRSeriesForTargetConversion(input, safeTarget) ?? solveCSTRSeriesForward(input);
+    pfrOut = targetAOut;
+    cstrOut = targetAOut;
+  } else {
+    seriesOutput = solveCSTRSeriesForward(input);
+    cstrOut = solveCSTRForward(
+      { a_in: input.a_in, kinetics: input.kinetics, v_dot: input.v_dot },
+      seriesOutput.tau_total,
+    ).a_out;
+    pfrOut = solvePFRForward(
+      { a_in: input.a_in, kinetics: input.kinetics, v_dot: input.v_dot },
+      seriesOutput.tau_total,
+    ).a_out;
+  }
 
   return {
     curve: generateLevenspielCurve(input, Math.max(input.a_in, 1), 140),
-    pfrArea: buildPfrArea(input, pfrOutput.a_out, input.a_in),
+    pfrArea: buildPfrArea(input, pfrOut, input.a_in),
     cstrArea: buildRectangleArea(
       'Single CSTR',
-      cstrOutput.a_out,
+      cstrOut,
       input.a_in,
-      reciprocalRateAt(input, cstrOutput.a_out),
+      reciprocalRateAt(input, cstrOut),
       CSTR_FILL,
       '#ef4444',
     ),
