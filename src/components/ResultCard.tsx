@@ -27,15 +27,25 @@ export function ResultCard({ title = 'Results', results }: ResultCardProps) {
         : 'grid-cols-1 sm:grid-cols-2';
 
   return (
-    <div className="my-3 rounded-lg border border-blue-100 bg-blue-50 p-3 shadow-sm">
-      <h3 className="mb-2 text-lg font-semibold text-blue-900">{title}</h3>
+    <div className="my-3 overflow-hidden rounded-xl border border-indigo-100/60 bg-gradient-to-br from-slate-50 to-indigo-50/30 p-4 shadow-sm">
+      <h3 className="mb-3 text-lg font-semibold tracking-tight text-indigo-950">{title}</h3>
       
-      <div className={`grid gap-3 ${gridClass}`}>
+      <div className={`grid gap-4 ${gridClass}`}>
         {results.map((res, i) => (
-          <div key={i} className={`rounded border bg-white p-3 shadow-sm ${res.highlight ? 'border-blue-300 ring-1 ring-blue-300' : 'border-gray-100'}`}>
-            <div className="text-sm font-medium text-gray-500">{res.label}</div>
-            <div className="mt-1 text-lg font-semibold text-gray-900 xl:text-xl">
-              {formatNumber(res.value)} <span className="text-sm font-normal text-gray-500">{res.unit}</span>
+          <div 
+            key={i} 
+            className={`flex flex-col rounded-xl border bg-white p-4 transition-all duration-300 ${
+              res.highlight 
+                ? 'border-indigo-200 bg-gradient-to-b from-white to-indigo-50/30 shadow-md ring-1 ring-inset ring-indigo-100' 
+                : 'border-slate-100 shadow-sm hover:shadow'
+            }`}
+          >
+            <div className={`text-sm font-medium ${res.highlight ? 'text-indigo-600' : 'text-slate-500'}`}>
+              {res.label}
+            </div>
+            <div className={`mt-1.5 flex items-baseline gap-1 text-2xl font-bold tracking-tight ${res.highlight ? 'text-indigo-950' : 'text-slate-800'}`}>
+              {formatNumber(res.value)} 
+              <span className="text-sm font-medium text-slate-400">{res.unit}</span>
             </div>
           </div>
         ))}

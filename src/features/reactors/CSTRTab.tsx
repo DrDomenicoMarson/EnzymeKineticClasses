@@ -12,6 +12,7 @@ import {
   solveCSTRForward,
   solveCSTRInverse,
 } from '../../lib/reactors/cstr';
+import { rate } from '../../lib/kinetics/michaelisMenten';
 import { Units } from '../../lib/units/format';
 import { validateContinuousForm } from '../../lib/validation';
 import {
@@ -77,7 +78,7 @@ export function CSTRTab({
             type: 'scatter',
             mode: 'lines',
             name: 'a_out vs τ',
-            line: { color: '#ef4444', width: 2 },
+            line: { color: '#4f46e5', width: 2.5 }, // indigo
           },
           {
             x: curve.map((point) => point.tau),
@@ -86,15 +87,15 @@ export function CSTRTab({
             mode: 'lines',
             name: 'X vs τ',
             yaxis: 'y2',
-            line: { color: '#10b981', width: 2, dash: 'dash' },
+            line: { color: '#0d9488', width: 2.5, dash: 'dash' }, // teal
           },
           {
             x: [output.tau],
             y: [output.a_out],
             type: 'scatter',
             mode: 'markers',
-            name: 'Operating Point (a_out)',
-            marker: { color: '#ef4444', size: 10, symbol: 'circle' },
+            name: 'Operating Point (a)',
+            marker: { color: '#4f46e5', size: 10, symbol: 'circle' },
             hoverinfo: 'skip',
           },
           {
@@ -104,7 +105,7 @@ export function CSTRTab({
             mode: 'markers',
             name: 'Operating Point (X)',
             yaxis: 'y2',
-            marker: { color: '#10b981', size: 10, symbol: 'circle' },
+            marker: { color: '#0d9488', size: 10, symbol: 'circle' },
             hoverinfo: 'skip',
           },
         ];
@@ -113,19 +114,79 @@ export function CSTRTab({
     margin: { t: 10, r: 50, b: 40, l: 50 },
     xaxis: { title: { text: 'Residence Time τ (min)' } },
     yaxis: {
-      title: { text: 'Outlet Concentration a_out (mol/L)', font: { color: '#ef4444' } },
-      tickfont: { color: '#ef4444' },
+      title: { text: 'Outlet Concentration a_out (mol/L)', font: { color: '#4f46e5' } },
+      tickfont: { color: '#4f46e5' },
     },
     yaxis2: {
-      title: { text: 'Conversion X (-)', font: { color: '#10b981' } },
-      tickfont: { color: '#10b981' },
+      title: { text: 'Conversion X (-)', font: { color: '#0d9488' } },
+      tickfont: { color: '#0d9488' },
       overlaying: 'y',
       side: 'right',
       range: [0, 1.05],
     },
     legend: { x: 0.5, y: 1.1, xanchor: 'center', orientation: 'h' },
     autosize: true,
-    font: { size: 12 },
+    font: { size: 12, family: 'Inter, sans-serif' },
+    plot_bgcolor: 'transparent',
+    paper_bgcolor: 'transparent',
+  };
+
+  const levenspielData: Data[] = [];
+  if (output !== null) {
+    const a_in = shared.a_in;
+    const a_out = output.a_out;
+    const maxA = Math.max(a_in * 1.05, 0.01);
+    const points = 100;
+    const da = maxA / points;
+
+    const xCurve = [];
+    const yCurve = [];
+    for (let i = 1; i <= points; i++) { // Skip 0
+      const a_val = i * da;
+      const r = rate(a_val, shared.kinetics);
+      if (r > 0) {
+        xCurve.push(a_val);
+        yCurve.push(1 / r);
+      }
+    }
+
+    const rec_rate_out = 1 / rate(a_out, shared.kinetics);
+
+    levenspielData.push({
+      x: xCurve,
+      y: yCurve,
+      type: 'scatter',
+      mode: 'lines',
+      name: '1/v(a)',
+      line: { color: '#64748b', width: 2 },
+      hoverinfo: 'x+y'
+    });
+
+    levenspielData.push({
+      x: [a_out, a_in, a_in, a_out, a_out],
+      y: [0, 0, rec_rate_out, rec_rate_out, 0],
+      type: 'scatter',
+      mode: 'none',
+      fill: 'toself',
+      fillcolor: 'rgba(99, 102, 241, 0.2)', // indigo
+      name: 'CSTR Area',
+      hoverinfo: 'skip'
+    });
+  }
+
+  const levenspielLayout: Partial<Layout> = {
+    margin: { t: 10, r: 10, b: 40, l: 60 },
+    xaxis: { title: { text: `Substrate a (${Units.CONCENTRATION})` } },
+    yaxis: { 
+      title: { text: 'Reciprocal Rate 1/v(a)' }, 
+      rangemode: 'tozero',
+      range: output ? [0, 1.5 * (1 / rate(output.a_out || 0.001, shared.kinetics))] : undefined
+    },
+    showlegend: false,
+    autosize: true,
+    font: { size: 12, family: 'Inter, sans-serif' },
+    plot_bgcolor: 'transparent',
+    paper_bgcolor: 'transparent',
   };
 
   return (
@@ -136,7 +197,7 @@ export function CSTRTab({
           onChange={(kinetics) => onSharedChange({ kinetics })}
         />
 
-        <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <SolveModeSelector
             mode={state.solveMode}
             onChange={(solveMode) => onStateChange({ solveMode })}
@@ -146,11 +207,11 @@ export function CSTRTab({
             ]}
           />
 
-          <div className="mt-4 space-y-4 border-t pt-2">
+          <div className="mt-5 space-y-4 border-t border-slate-100 pt-4">
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label className="mb-1 block text-sm font-medium text-slate-700">
                 Inlet Concentration, a_in{' '}
-                <span className="text-xs text-gray-500">({Units.CONCENTRATION})</span>
+                <span className="text-xs text-slate-400">({Units.CONCENTRATION})</span>
               </label>
               <input
                 type="number"
@@ -160,13 +221,13 @@ export function CSTRTab({
                 onChange={(event) =>
                   onSharedChange({ a_in: Number.parseFloat(event.target.value) || 0 })
                 }
-                className="w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-blue-500"
+                className="w-full rounded-lg border border-slate-200 bg-white p-2.5 text-slate-900 shadow-sm transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none"
               />
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
-                Flow Rate, Q <span className="text-xs text-gray-500">({Units.FLOW})</span>
+              <label className="mb-1 block text-sm font-medium text-slate-700">
+                Flow Rate, Q <span className="text-xs text-slate-400">({Units.FLOW})</span>
               </label>
               <input
                 type="number"
@@ -176,20 +237,20 @@ export function CSTRTab({
                 onChange={(event) =>
                   onSharedChange({ v_dot: Number.parseFloat(event.target.value) || 0 })
                 }
-                className="w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-blue-500"
+                className="w-full rounded-lg border border-slate-200 bg-white p-2.5 text-slate-900 shadow-sm transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none"
               />
             </div>
 
             <div
-              className={`rounded-md border p-3 ${
+              className={`rounded-xl border p-4 transition-colors duration-300 ${
                 state.solveMode === 'forward'
-                  ? 'border-blue-200 bg-blue-50'
-                  : 'border-gray-200 bg-gray-50 opacity-75'
+                  ? 'border-indigo-100 bg-indigo-50/50'
+                  : 'border-slate-100 bg-slate-50/50'
               }`}
             >
-              <label className="mb-1 block text-sm font-medium text-gray-900">
+              <label className={`mb-1 block text-sm font-medium ${state.solveMode === 'forward' ? 'text-indigo-900' : 'text-slate-500'}`}>
                 Residence Time, τ{' '}
-                <span className="text-xs text-gray-500">({Units.TIME})</span>
+                <span className="text-xs opacity-75">({Units.TIME})</span>
               </label>
               <input
                 type="number"
@@ -200,19 +261,19 @@ export function CSTRTab({
                   onStateChange({ tau: Number.parseFloat(event.target.value) || 0 })
                 }
                 disabled={state.solveMode !== 'forward'}
-                className="w-full rounded-md border border-gray-300 p-2 shadow-sm"
+                className="w-full rounded-lg border border-slate-200 bg-white p-2.5 shadow-sm transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 disabled:opacity-60 disabled:cursor-not-allowed outline-none"
               />
             </div>
 
             <div
-              className={`rounded-md border p-3 ${
+              className={`rounded-xl border p-4 transition-colors duration-300 ${
                 state.solveMode === 'inverse'
-                  ? 'border-blue-200 bg-blue-50'
-                  : 'border-gray-200 bg-gray-50 opacity-75'
+                  ? 'border-indigo-100 bg-indigo-50/50'
+                  : 'border-slate-100 bg-slate-50/50'
               }`}
             >
-              <label className="mb-1 block text-sm font-medium text-gray-900">
-                Target Conversion, X <span className="text-xs text-gray-500">(-)</span>
+              <label className={`mb-1 block text-sm font-medium ${state.solveMode === 'inverse' ? 'text-indigo-900' : 'text-slate-500'}`}>
+                Target Conversion, X <span className="text-xs opacity-75">(-)</span>
               </label>
               <input
                 type="number"
@@ -224,7 +285,7 @@ export function CSTRTab({
                   onStateChange({ X_target: Number.parseFloat(event.target.value) || 0 })
                 }
                 disabled={state.solveMode !== 'inverse'}
-                className="w-full rounded-md border border-gray-300 p-2 shadow-sm"
+                className="w-full rounded-lg border border-slate-200 bg-white p-2.5 shadow-sm transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 disabled:opacity-60 disabled:cursor-not-allowed outline-none"
               />
             </div>
           </div>
@@ -288,23 +349,36 @@ export function CSTRTab({
               ]}
             />
 
-            <div className="flex h-[420px] flex-col overflow-hidden rounded-lg border border-gray-200 bg-white p-4 shadow-sm xl:h-[460px]">
-              <h3 className="mb-2 text-lg font-semibold text-gray-800">
-                Steady-State Design Curves
-              </h3>
-              <div className="min-h-0 flex-1">
-                <Plot
-                  data={plotData}
-                  layout={plotLayout}
-                  useResizeHandler
-                  style={{ width: '100%', height: '100%' }}
-                  config={{ displayModeBar: false }}
-                />
+            <div className="flex flex-col xl:flex-row gap-6">
+              <div className="flex h-[400px] flex-1 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h3 className="mb-2 text-lg font-semibold text-slate-800 tracking-tight">Steady-State Curves</h3>
+                <div className="min-h-0 flex-1">
+                  <Plot
+                    data={plotData}
+                    layout={plotLayout}
+                    useResizeHandler
+                    style={{ width: '100%', height: '100%' }}
+                    config={{ displayModeBar: false }}
+                  />
+                </div>
+              </div>
+
+              <div className="flex h-[400px] flex-1 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h3 className="mb-2 text-lg font-semibold text-slate-800 tracking-tight">Levenspiel Plot</h3>
+                <div className="min-h-0 flex-1">
+                  <Plot
+                    data={levenspielData}
+                    layout={levenspielLayout}
+                    useResizeHandler
+                    style={{ width: '100%', height: '100%' }}
+                    config={{ displayModeBar: false }}
+                  />
+                </div>
               </div>
             </div>
           </>
         ) : (
-          <div className="rounded-lg border border-dashed border-amber-300 bg-white p-8 text-center text-gray-500 shadow-sm">
+          <div className="rounded-xl border border-dashed border-amber-300 bg-amber-50/50 p-8 text-center text-amber-600 shadow-sm">
             Fix the highlighted inputs to view the CSTR design curves.
           </div>
         )}

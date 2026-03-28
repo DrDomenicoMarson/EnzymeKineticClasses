@@ -13,7 +13,7 @@ interface SolveModeSelectorProps {
  * @param props.mode The active solve mode.
  * @param props.onChange Callback invoked when the mode changes.
  * @param props.options The radio options to render.
- * @returns A radio-group selector.
+ * @returns A segmented-control selector.
  */
 export function SolveModeSelector({
   mode, 
@@ -25,21 +25,25 @@ export function SolveModeSelector({
 }: SolveModeSelectorProps) {
   return (
     <div className="mb-4">
-      <label className="block text-sm font-medium text-gray-700 mb-2">Solve Mode</label>
-      <div className="flex space-x-4">
-        {options.map((opt) => (
-          <label key={opt.value} className="flex items-center space-x-2 cursor-pointer">
-            <input
-              type="radio"
-              name="solveMode"
-              value={opt.value}
-              checked={mode === opt.value}
-              onChange={() => onChange(opt.value)}
-              className="form-radio h-4 w-4 text-blue-600 focus:ring-blue-500"
-            />
-            <span className="text-sm text-gray-800">{opt.label}</span>
-          </label>
-        ))}
+      <label className="mb-2 block text-sm font-medium text-slate-700">Solve Mode</label>
+      <div className="relative flex rounded-xl bg-slate-100/80 p-1 shadow-inner ring-1 ring-slate-200">
+        {options.map((opt) => {
+          const isActive = mode === opt.value;
+          return (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => onChange(opt.value)}
+              className={`relative flex-1 rounded-lg py-2 text-sm font-medium transition-all duration-300 focus:outline-none ${
+                isActive
+                  ? 'bg-white text-indigo-700 shadow-sm ring-1 ring-slate-200/50'
+                  : 'text-slate-500 hover:bg-slate-200/40 hover:text-slate-700'
+              }`}
+            >
+              {opt.label}
+            </button>
+          );
+        })}
       </div>
     </div>
   );

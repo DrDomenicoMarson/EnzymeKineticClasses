@@ -29,17 +29,27 @@ export function DocumentationBlock({
   };
 
   return (
-    <div className="bg-white border text-sm text-gray-700 border-gray-200 rounded-lg shadow-sm overflow-hidden mb-6">
+    <div className="mb-6 overflow-hidden rounded-xl border border-slate-200 bg-white text-sm text-slate-700 shadow-sm transition-all duration-300 hover:shadow-md">
       <button 
-        className="w-full px-4 py-3 bg-gray-50 flex justify-between items-center hover:bg-gray-100 transition-colors"
+        className="flex w-full items-center justify-between bg-slate-50 px-5 py-4 transition-colors hover:bg-slate-100/80 focus:outline-none"
         onClick={handleToggle}
       >
-        <h3 className="text-base font-semibold text-gray-900">{title} — Documentation</h3>
-        <span className="text-gray-500">{isExpanded ? '▼ Hide' : '▶ Show'}</span>
+        <h3 className="text-base font-medium text-slate-800">{title} — Documentation</h3>
+        <div className="flex items-center space-x-2 text-slate-400">
+          <span className="text-sm font-medium">{isExpanded ? 'Hide' : 'Show'}</span>
+          <svg 
+            className={`h-5 w-5 transform transition-transform duration-300 ${isExpanded ? 'rotate-180 text-indigo-500' : 'text-slate-400'}`} 
+            fill="none" 
+            viewBox="0 0 24 24" 
+            stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
       </button>
       
       {isExpanded && (
-        <div className="p-4 space-y-6">
+        <div className="p-5 space-y-6">
           <section>
             <h4 className="font-semibold text-gray-900 mb-2 border-b pb-1">Assumptions</h4>
             <ul className="list-disc pl-5 space-y-1">

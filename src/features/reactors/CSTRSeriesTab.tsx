@@ -61,7 +61,7 @@ export function CSTRSeriesTab({
           y: profile.map((point) => point.aOut),
           type: 'bar',
           name: 'Outlet Concentration',
-          marker: { color: '#2563eb' },
+          marker: { color: '#4f46e5' }, // indigo
         },
         {
           x: profile.map((point) => `Stage ${point.stage}`),
@@ -70,7 +70,7 @@ export function CSTRSeriesTab({
           mode: 'lines+markers',
           name: 'Overall Conversion',
           yaxis: 'y2',
-          line: { color: '#10b981', width: 3 },
+          line: { color: '#0d9488', width: 3 }, // teal
           marker: { size: 9 },
         },
       ]
@@ -89,6 +89,9 @@ export function CSTRSeriesTab({
     barmode: 'group',
     legend: { orientation: 'h', x: 0.5, xanchor: 'center', y: 1.15 },
     autosize: true,
+    font: { size: 12, family: 'Inter, sans-serif' },
+    plot_bgcolor: 'transparent',
+    paper_bgcolor: 'transparent',
   };
 
   const performanceData: Data[] = output
@@ -98,7 +101,7 @@ export function CSTRSeriesTab({
           y: performance.map((row) => row.X),
           type: 'bar',
           name: 'Final Conversion',
-          marker: { color: ['#2563eb', '#ef4444', '#10b981'] },
+          marker: { color: ['#4f46e5', '#f43f5e', '#0d9488'] }, // indigo, rose, teal
           text: performance.map((row) => formatNumber(row.X, 3)),
           textposition: 'outside',
         },
@@ -111,6 +114,9 @@ export function CSTRSeriesTab({
     yaxis: { title: { text: 'Final Conversion X (-)' }, range: [0, 1.05] },
     autosize: true,
     showlegend: false,
+    font: { size: 12, family: 'Inter, sans-serif' },
+    plot_bgcolor: 'transparent',
+    paper_bgcolor: 'transparent',
   };
 
   const handleStageCountChange = (stageCount: number) => {
@@ -139,19 +145,19 @@ export function CSTRSeriesTab({
           onChange={(kinetics) => onSharedChange({ kinetics })}
         />
 
-        <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-          <div className="mb-4 border-b pb-2">
-            <h3 className="text-lg font-semibold text-gray-800">CSTR Train Inputs</h3>
-            <p className="mt-1 text-sm text-gray-500">
+        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="mb-5 border-b border-slate-100 pb-3">
+            <h3 className="text-lg font-semibold tracking-tight text-slate-800">CSTR Train Inputs</h3>
+            <p className="mt-1 text-sm text-slate-500">
               v1 keeps the staged train in forward-simulation mode with direct stage volumes.
             </p>
           </div>
 
           <div className="space-y-4">
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label className="mb-1 block text-sm font-medium text-slate-700">
                 Inlet Concentration, a_in{' '}
-                <span className="text-xs text-gray-500">({Units.CONCENTRATION})</span>
+                <span className="text-xs text-slate-400">({Units.CONCENTRATION})</span>
               </label>
               <input
                 type="number"
@@ -161,13 +167,13 @@ export function CSTRSeriesTab({
                 onChange={(event) =>
                   onSharedChange({ a_in: Number.parseFloat(event.target.value) || 0 })
                 }
-                className="w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-blue-500"
+                className="w-full rounded-lg border border-slate-200 bg-white p-2.5 text-slate-900 shadow-sm transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none"
               />
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
-                Flow Rate, Q <span className="text-xs text-gray-500">({Units.FLOW})</span>
+              <label className="mb-1 block text-sm font-medium text-slate-700">
+                Flow Rate, Q <span className="text-xs text-slate-400">({Units.FLOW})</span>
               </label>
               <input
                 type="number"
@@ -177,12 +183,12 @@ export function CSTRSeriesTab({
                 onChange={(event) =>
                   onSharedChange({ v_dot: Number.parseFloat(event.target.value) || 0 })
                 }
-                className="w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-blue-500"
+                className="w-full rounded-lg border border-slate-200 bg-white p-2.5 text-slate-900 shadow-sm transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none"
               />
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label className="mb-1 block text-sm font-medium text-slate-700">
                 Number of Stages
               </label>
               <input
@@ -194,15 +200,15 @@ export function CSTRSeriesTab({
                 onChange={(event) =>
                   handleStageCountChange(Number.parseInt(event.target.value, 10) || 1)
                 }
-                className="w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-blue-500"
+                className="w-full rounded-lg border border-slate-200 bg-white p-2.5 text-slate-900 shadow-sm transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none"
               />
             </div>
 
-            <div className="space-y-3 rounded-md border border-gray-200 bg-gray-50 p-3">
-              <h4 className="text-sm font-semibold text-gray-800">Stage Volumes</h4>
+            <div className="space-y-3 rounded-xl border border-slate-100 bg-slate-50 p-4">
+              <h4 className="text-sm font-semibold text-slate-800">Stage Volumes</h4>
               {state.volumes.map((volume, stageIndex) => (
                 <div key={`volume-${stageIndex}`} className="grid grid-cols-[1fr_2fr] items-center gap-3">
-                  <label className="text-sm text-gray-700">Stage {stageIndex + 1}</label>
+                  <label className="text-sm font-medium text-slate-600">Stage {stageIndex + 1}</label>
                   <input
                     type="number"
                     step="0.1"
@@ -214,7 +220,7 @@ export function CSTRSeriesTab({
                         Number.parseFloat(event.target.value) || 0,
                       )
                     }
-                    className="w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-blue-500"
+                    className="w-full rounded-lg border border-slate-200 bg-white p-2 shadow-sm transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none"
                   />
                 </div>
               ))}
@@ -264,8 +270,8 @@ export function CSTRSeriesTab({
             />
 
             <div className="grid gap-6 xl:grid-cols-[2fr_1fr]">
-              <div className="flex min-h-[360px] flex-col overflow-hidden rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-                <h3 className="mb-2 text-lg font-semibold text-gray-800">
+              <div className="flex min-h-[360px] flex-col overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h3 className="mb-2 text-lg font-semibold tracking-tight text-slate-800">
                   Stagewise Concentration / Conversion Profile
                 </h3>
                 <div className="min-h-0 flex-1">
@@ -279,9 +285,9 @@ export function CSTRSeriesTab({
                 </div>
               </div>
 
-              <div className="flex min-h-[360px] flex-col overflow-hidden rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-                <h3 className="mb-2 text-lg font-semibold text-gray-800">
-                  Final Performance at Same Total τ
+              <div className="flex min-h-[360px] flex-col overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h3 className="mb-2 text-lg font-semibold tracking-tight text-slate-800">
+                  Final Performance (Same Total τ)
                 </h3>
                 <div className="min-h-0 flex-1">
                   <Plot
@@ -295,43 +301,43 @@ export function CSTRSeriesTab({
               </div>
             </div>
 
-            <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-              <h3 className="mb-3 text-lg font-semibold text-gray-800">Stage Summary</h3>
+            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm overflow-hidden">
+              <h3 className="mb-4 text-lg font-semibold tracking-tight text-slate-800">Stage Summary</h3>
               <div className="overflow-x-auto">
                 <table className="min-w-full text-sm">
                   <thead>
-                    <tr className="border-b text-left text-gray-500">
-                      <th className="pb-2 pr-4">Stage</th>
-                      <th className="pb-2 pr-4">V (L)</th>
-                      <th className="pb-2 pr-4">τ (min)</th>
-                      <th className="pb-2 pr-4">a_in</th>
-                      <th className="pb-2 pr-4">a_out</th>
-                      <th className="pb-2 pr-4">Stage X</th>
-                      <th className="pb-2">Overall X</th>
+                    <tr className="border-b border-slate-200 text-left text-slate-500 bg-slate-50/50">
+                      <th className="py-3 px-4 font-medium rounded-tl-lg">Stage</th>
+                      <th className="py-3 px-4 font-medium">V (L)</th>
+                      <th className="py-3 px-4 font-medium">τ (min)</th>
+                      <th className="py-3 px-4 font-medium">a_in</th>
+                      <th className="py-3 px-4 font-medium">a_out</th>
+                      <th className="py-3 px-4 font-medium">Stage X</th>
+                      <th className="py-3 px-4 font-medium rounded-tr-lg">Overall X</th>
                     </tr>
                   </thead>
                   <tbody>
                     {output.stages.map((stage) => (
-                      <tr key={`stage-row-${stage.stage}`} className="border-b last:border-b-0">
-                        <td className="py-2 pr-4 font-medium text-gray-800">{stage.stage}</td>
-                        <td className="py-2 pr-4">{formatNumber(stage.V)}</td>
-                        <td className="py-2 pr-4">{formatNumber(stage.tau)}</td>
-                        <td className="py-2 pr-4">{formatNumber(stage.a_in)}</td>
-                        <td className="py-2 pr-4">{formatNumber(stage.a_out)}</td>
-                        <td className="py-2 pr-4">{formatNumber(stage.X_stage, 3)}</td>
-                        <td className="py-2">{formatNumber(stage.X, 3)}</td>
+                      <tr key={`stage-row-${stage.stage}`} className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50 transition-colors">
+                        <td className="py-3 px-4 font-medium text-slate-800">{stage.stage}</td>
+                        <td className="py-3 px-4 text-slate-600">{formatNumber(stage.V)}</td>
+                        <td className="py-3 px-4 text-slate-600">{formatNumber(stage.tau)}</td>
+                        <td className="py-3 px-4 text-slate-600">{formatNumber(stage.a_in)}</td>
+                        <td className="py-3 px-4 text-slate-600">{formatNumber(stage.a_out)}</td>
+                        <td className="py-3 px-4 text-slate-600">{formatNumber(stage.X_stage, 3)}</td>
+                        <td className="py-3 px-4 font-semibold text-slate-800">{formatNumber(stage.X, 3)}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
 
-              <div className="mt-4 grid gap-3 md:grid-cols-3">
+              <div className="mt-5 grid gap-4 md:grid-cols-3">
                 {performance.map((row: ReactorPerformanceDatum) => (
-                  <div key={row.label} className="rounded-md border border-gray-200 bg-gray-50 p-3">
-                    <div className="text-sm font-semibold text-gray-800">{row.label}</div>
-                    <div className="mt-2 text-sm text-gray-600">
-                      X = {formatNumber(row.X, 3)} | a_out = {formatNumber(row.a_out, 3)}
+                  <div key={row.label} className="flex flex-col rounded-xl border border-indigo-100 bg-gradient-to-b from-slate-50 to-white p-4 shadow-sm">
+                    <div className="text-sm font-semibold tracking-tight text-indigo-900">{row.label}</div>
+                    <div className="mt-2 text-sm text-slate-600 font-medium">
+                      X = {formatNumber(row.X, 3)} <span className="text-slate-300">|</span> a_out = {formatNumber(row.a_out, 3)}
                     </div>
                   </div>
                 ))}
@@ -339,7 +345,7 @@ export function CSTRSeriesTab({
             </div>
           </>
         ) : (
-          <div className="rounded-lg border border-dashed border-amber-300 bg-white p-8 text-center text-gray-500 shadow-sm">
+          <div className="rounded-xl border border-dashed border-amber-300 bg-amber-50/50 p-8 text-center text-amber-600 shadow-sm">
             Fix the highlighted inputs to view the staged-reactor results.
           </div>
         )}
