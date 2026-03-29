@@ -13,8 +13,11 @@ import {
   generateNormalizedDecayCurve,
   reciprocalRateAt,
 } from '../../lib/comparison/levenspiel';
-import { solveCSTRSeriesForward } from '../../lib/reactors/cstrSeries';
-import { Units } from '../../lib/units/format';
+import { 
+  solveCSTRSeriesForward, 
+  solveScaledCSTRSeriesForTargetConversion 
+} from '../../lib/reactors/cstrSeries';
+import { Units, formatNumber } from '../../lib/units/format';
 import { validateCSTRSeriesForm } from '../../lib/validation';
 import {
   CSTRSeriesFormState,
@@ -60,6 +63,11 @@ export function CompareTab({
 
   const baseOutput =
     validationMessages.length === 0 ? solveCSTRSeriesForward(seriesInput) : null;
+  const targetSeriesOutput = 
+    isTargetMode && validationMessages.length === 0 
+      ? solveScaledCSTRSeriesForTargetConversion(seriesInput, compareTargetX) 
+      : null;
+
   const performance =
     validationMessages.length === 0 ? calculateEquivalentPerformance(seriesInput, isTargetMode ? compareTargetX : undefined) : [];
   const characteristicCurve =
@@ -294,7 +302,9 @@ export function CompareTab({
           <div className="mb-4 border-b pb-2">
             <h3 className="text-lg font-semibold text-gray-800">Comparison Basis</h3>
             <p className="mt-1 text-sm text-gray-500">
-              The CSTR-train curve uses the same stage-volume ratios configured here and in the staged-reactor tab.
+              {isTargetMode 
+                ? 'All reactors scale up or down dynamically to guarantee an identical final conversion (X).'
+                : 'All reactors are constrained to the exact total volume (V) of the train to directly compare capability.'}
             </p>
           </div>
 
@@ -302,8 +312,8 @@ export function CompareTab({
             mode={compareMode as any}
             onChange={(mode) => setCompareMode(mode as any)}
             options={[
-              { value: 'fixed_tau' as any, label: 'Fixed Configuration' },
-              { value: 'target_conversion' as any, label: 'Target Conversion' },
+              { value: 'fixed_tau' as any, label: 'Equal Total Volume' },
+              { value: 'target_conversion' as any, label: 'Equal Target Conversion' },
             ]}
           />
 
@@ -378,11 +388,33 @@ export function CompareTab({
             </div>
 
             <div className="space-y-3 rounded-md border border-gray-200 bg-gray-50 p-3">
-              <h4 className="text-sm font-semibold text-gray-800">Stage Volumes</h4>
-              {seriesState.volumes.map((volume, stageIndex) => (
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-semibold text-gray-800">
+                  Stage Volumes <span className="text-xs font-normal text-gray-500">({isTargetMode ? 'Ratio' : Units.VOLUME})</span>
+                </h4>
+                {isTargetMode && targetSeriesOutput && (
+                  <button
+                    type="button"
+                    title="Set the train's underlying physical volumes to these exact mathematically calculated values."
+                    onClick={() => {
+                      const newVolumes = targetSeriesOutput.stages.map(s => Number(Number(s.V).toFixed(4)));
+                      onSeriesChange({ volumes: newVolumes });
+                    }}
+                    className="rounded border border-indigo-200 bg-white px-2 py-1 text-xs font-medium text-indigo-700 transition-colors hover:bg-indigo-50 active:bg-indigo-100"
+                  >
+                    Sync to Train
+                  </button>
+                )}
+              </div>
+              {seriesState.volumes.map((volume, stageIndex) => {
+                const actualVolume = isTargetMode 
+                  ? targetSeriesOutput?.stages[stageIndex]?.V 
+                  : undefined;
+                
+                return (
                 <div
                   key={`compare-volume-${stageIndex}`}
-                  className={`grid grid-cols-[1fr_2fr] items-center gap-3 ${isTargetMode ? 'opacity-70' : ''}`}
+                  className={`grid ${isTargetMode ? 'grid-cols-[1fr_2fr_1fr]' : 'grid-cols-[1fr_2fr]'} items-center gap-3 ${isTargetMode ? 'opacity-80' : ''}`}
                 >
                   <label className="text-sm text-gray-700">Stage {stageIndex + 1} {isTargetMode && 'Ratio'}</label>
                   <input
@@ -398,8 +430,13 @@ export function CompareTab({
                     }
                     className="w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-blue-500"
                   />
+                  {isTargetMode && (
+                    <div className="text-sm font-medium text-blue-800 text-right pr-2">
+                      {actualVolume !== undefined ? `${formatNumber(actualVolume)} L` : '-'}
+                    </div>
+                  )}
                 </div>
-              ))}
+              )})}
             </div>
           </div>
         </div>
@@ -439,12 +476,37 @@ export function CompareTab({
         {baseOutput ? (
           <>
             <ResultCard
-              title={isTargetMode ? "Performance at Identical Target Conversion" : "Performance at Fixed Baseline Basis"}
+              title={isTargetMode ? "Performance at Equal Target Conversion" : "Performance at Equal Total Volume"}
               results={[
-                { label: 'Train τ', value: performance[0]?.tau ?? 0, unit: Units.TIME, highlight: isTargetMode },
-                { label: 'Single CSTR τ', value: performance[1]?.tau ?? 0, unit: Units.TIME, highlight: isTargetMode },
-                { label: 'PFR τ', value: performance[2]?.tau ?? 0, unit: Units.TIME, highlight: isTargetMode },
-                { label: 'Eval Conversion X', value: performance[0]?.X ?? 0, unit: Units.DIMENSIONLESS },
+                { 
+                  label: 'Total Train V & τ', 
+                  value: (performance[0]?.tau ?? 0) * shared.v_dot, 
+                  unit: Units.VOLUME,
+                  secondaryValue: performance[0]?.tau ?? 0,
+                  secondaryUnit: Units.TIME,
+                  highlight: isTargetMode 
+                },
+                { 
+                  label: 'Single CSTR V & τ', 
+                  value: (performance[1]?.tau ?? 0) * shared.v_dot, 
+                  unit: Units.VOLUME,
+                  secondaryValue: performance[1]?.tau ?? 0,
+                  secondaryUnit: Units.TIME,
+                  highlight: isTargetMode 
+                },
+                { 
+                  label: 'PFR V & τ', 
+                  value: (performance[2]?.tau ?? 0) * shared.v_dot, 
+                  unit: Units.VOLUME,
+                  secondaryValue: performance[2]?.tau ?? 0,
+                  secondaryUnit: Units.TIME,
+                  highlight: isTargetMode 
+                },
+                { 
+                  label: 'Eval Conversion X', 
+                  value: performance[0]?.X ?? 0, 
+                  unit: Units.DIMENSIONLESS 
+                },
               ]}
             />
 

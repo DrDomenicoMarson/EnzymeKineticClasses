@@ -3,12 +3,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { Layout } from './components/Layout';
 import { TabNavigation } from './components/TabNavigation';
 import { OverviewTab } from './features/overview/OverviewTab';
-import {
-  createDefaultSimulatorState,
-  createSimulatorStateFromPreset,
-  defaultPresets,
-  getPresetById,
-} from './lib/presets/defaults';
+import { createDefaultSimulatorState } from './lib/presets/defaults';
 import {
   BatchFormState,
   CSTRSeriesFormState,
@@ -39,24 +34,6 @@ const CompareTab = lazy(() =>
 );
 
 /**
- * Applies a partial update to the simulator state while marking the preset as custom.
- *
- * @param previousState The current simulator state.
- * @param nextState The updated simulator state.
- * @returns The updated state with preset metadata cleared to custom.
- */
-function markCustomPreset(
-  previousState: SimulatorState,
-  nextState: SimulatorState,
-): SimulatorState {
-  if (previousState.selectedPresetId === nextState.selectedPresetId) {
-    return { ...nextState, selectedPresetId: 'custom' };
-  }
-
-  return nextState;
-}
-
-/**
  * Renders the stateful simulator shell.
  *
  * @returns The application content inside the shared provider.
@@ -68,64 +45,42 @@ function AppContent() {
   );
 
   const updateShared = (updates: Partial<SharedSimulatorInputs>) => {
-    setSimulatorState((previousState) =>
-      markCustomPreset(previousState, {
-        ...previousState,
-        shared: {
-          ...previousState.shared,
-          ...updates,
-          kinetics: updates.kinetics ?? previousState.shared.kinetics,
-        },
-      }),
-    );
+    setSimulatorState((previousState) => ({
+      ...previousState,
+      shared: {
+        ...previousState.shared,
+        ...updates,
+        kinetics: updates.kinetics ?? previousState.shared.kinetics,
+      },
+    }));
   };
 
   const updateBatchState = (updates: Partial<BatchFormState>) => {
-    setSimulatorState((previousState) =>
-      markCustomPreset(previousState, {
-        ...previousState,
-        batch: { ...previousState.batch, ...updates },
-      }),
-    );
+    setSimulatorState((previousState) => ({
+      ...previousState,
+      batch: { ...previousState.batch, ...updates },
+    }));
   };
 
   const updateCSTRState = (updates: Partial<ContinuousFormState>) => {
-    setSimulatorState((previousState) =>
-      markCustomPreset(previousState, {
-        ...previousState,
-        cstr: { ...previousState.cstr, ...updates },
-      }),
-    );
+    setSimulatorState((previousState) => ({
+      ...previousState,
+      cstr: { ...previousState.cstr, ...updates },
+    }));
   };
 
   const updatePFRState = (updates: Partial<ContinuousFormState>) => {
-    setSimulatorState((previousState) =>
-      markCustomPreset(previousState, {
-        ...previousState,
-        pfr: { ...previousState.pfr, ...updates },
-      }),
-    );
+    setSimulatorState((previousState) => ({
+      ...previousState,
+      pfr: { ...previousState.pfr, ...updates },
+    }));
   };
 
   const updateSeriesState = (updates: Partial<CSTRSeriesFormState>) => {
-    setSimulatorState((previousState) =>
-      markCustomPreset(previousState, {
-        ...previousState,
-        cstrSeries: { ...previousState.cstrSeries, ...updates },
-      }),
-    );
-  };
-
-  const handlePresetChange = (presetId: string) => {
-    if (!presetId) {
-      return;
-    }
-
-    const preset = getPresetById(presetId);
-    setSimulatorState(createSimulatorStateFromPreset(preset));
-    if (preset.preferredTab) {
-      setActiveTab(preset.preferredTab);
-    }
+    setSimulatorState((previousState) => ({
+      ...previousState,
+      cstrSeries: { ...previousState.cstrSeries, ...updates },
+    }));
   };
 
   const handleReset = () => {
@@ -133,27 +88,10 @@ function AppContent() {
     setActiveTab('overview');
   };
 
-  const selectedPreset = defaultPresets.find(
-    (preset) => preset.id === simulatorState.selectedPresetId,
-  );
-  const presetSelectorValue = selectedPreset?.id ?? '';
-
   return (
     <Layout
       header={
         <div className="flex flex-wrap items-center gap-3">
-          <select
-            className="rounded border border-gray-300 bg-white p-2 text-sm text-gray-700"
-            onChange={(event) => handlePresetChange(event.target.value)}
-            value={presetSelectorValue}
-          >
-            <option value="">Custom scenario</option>
-            {defaultPresets.map((preset) => (
-              <option key={preset.id} value={preset.id}>
-                {preset.name}
-              </option>
-            ))}
-          </select>
           <button
             type="button"
             onClick={handleReset}
@@ -165,16 +103,6 @@ function AppContent() {
       }
     >
       <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
-
-      <div className="mb-4 rounded-lg border border-sky-100 bg-sky-50 p-4 text-sm text-sky-950">
-        <div className="font-semibold">
-          {selectedPreset?.name ?? 'Custom scenario'}
-        </div>
-        <div className="mt-1 text-sky-900">
-          {selectedPreset?.description ??
-            'Current inputs no longer match a saved preset, so the simulator is running a custom scenario.'}
-        </div>
-      </div>
 
       {activeTab === 'overview' && <OverviewTab />}
 

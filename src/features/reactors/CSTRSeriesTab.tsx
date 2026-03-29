@@ -149,7 +149,7 @@ export function CSTRSeriesTab({
           <div className="mb-5 border-b border-slate-100 pb-3">
             <h3 className="text-lg font-semibold tracking-tight text-slate-800">CSTR Train Inputs</h3>
             <p className="mt-1 text-sm text-slate-500">
-              v1 keeps the staged train in forward-simulation mode with direct stage volumes.
+              Configure the exact structural volumes for each ideal continuous-stirred tank in the series. The solver aggregates the residence time to determine the total forward conversion.
             </p>
           </div>
 
@@ -205,7 +205,9 @@ export function CSTRSeriesTab({
             </div>
 
             <div className="space-y-3 rounded-xl border border-slate-100 bg-slate-50 p-4">
-              <h4 className="text-sm font-semibold text-slate-800">Stage Volumes</h4>
+              <h4 className="text-sm font-semibold text-slate-800">
+                Stage Volumes <span className="text-xs font-normal text-slate-500">({Units.VOLUME})</span>
+              </h4>
               {state.volumes.map((volume, stageIndex) => (
                 <div key={`volume-${stageIndex}`} className="grid grid-cols-[1fr_2fr] items-center gap-3">
                   <label className="text-sm font-medium text-slate-600">Stage {stageIndex + 1}</label>

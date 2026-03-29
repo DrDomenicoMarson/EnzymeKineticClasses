@@ -68,7 +68,6 @@ export interface CSTRSeriesFormState {
  * The complete shared simulator state held by the app shell.
  */
 export interface SimulatorState {
-  selectedPresetId: string;
   shared: SharedSimulatorInputs;
   batch: BatchFormState;
   cstr: ContinuousFormState;
@@ -239,19 +238,3 @@ export interface ReactorPerformanceDatum {
   tau: number;
 }
 
-/**
- * Preset metadata and initial simulator values.
- */
-export interface Preset {
-  id: string;
-  name: string;
-  description: string;
-  kinetics: KineticParams;
-  a_in: number;
-  v_dot: number;
-  batchTime: number;
-  tau: number;
-  target_X: number;
-  cstrSeriesVolumes: number[];
-  preferredTab?: TabId;
-}

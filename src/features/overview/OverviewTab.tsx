@@ -25,20 +25,12 @@ export function OverviewTab() {
         </ul>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid md:grid-cols-1 gap-6">
         <div className="bg-white rounded-lg shadow-sm border p-6">
           <h3 className="text-lg font-bold text-gray-900 border-b pb-2 mb-3">Desktop-First Layout</h3>
           <p className="text-sm text-gray-700 mb-4">
             The interface is optimized for wide desktop and projector screens, with room for control panels,
             plots, and engineering notes to coexist without hiding key information.
-          </p>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h3 className="text-lg font-bold text-gray-900 border-b pb-2 mb-3">Presets / Scenarios</h3>
-          <p className="text-sm text-gray-700 mb-4">
-            Use the preset scenarios menu above to load specific academic teaching cases, such as 
-            the zero-order or first-order limits of Michaelis-Menten kinetics, or CSTR vs PFR comparisons.
           </p>
         </div>
       </div>

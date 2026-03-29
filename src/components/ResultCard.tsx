@@ -6,6 +6,8 @@ interface ResultCardProps {
     label: string;
     value: number;
     unit: string;
+    secondaryValue?: number;
+    secondaryUnit?: string;
     highlight?: boolean;
   }[];
 }
@@ -43,9 +45,20 @@ export function ResultCard({ title = 'Results', results }: ResultCardProps) {
             <div className={`text-sm font-medium ${res.highlight ? 'text-indigo-600' : 'text-slate-500'}`}>
               {res.label}
             </div>
-            <div className={`mt-1.5 flex items-baseline gap-1 text-2xl font-bold tracking-tight ${res.highlight ? 'text-indigo-950' : 'text-slate-800'}`}>
-              {formatNumber(res.value)} 
-              <span className="text-sm font-medium text-slate-400">{res.unit}</span>
+            <div className={`mt-1.5 flex flex-wrap items-baseline gap-1 text-2xl font-bold tracking-tight ${res.highlight ? 'text-indigo-950' : 'text-slate-800'}`}>
+              <div>
+                {formatNumber(res.value)} 
+                <span className="ml-1 text-sm font-medium text-slate-400">{res.unit}</span>
+              </div>
+              {res.secondaryValue !== undefined && (
+                <>
+                  <span className="mx-1 text-xl font-normal text-slate-300">|</span>
+                  <div>
+                    {formatNumber(res.secondaryValue)}
+                    <span className="ml-1 text-sm font-medium text-slate-400">{res.secondaryUnit}</span>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         ))}
