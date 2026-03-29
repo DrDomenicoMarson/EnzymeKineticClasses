@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Data, Layout } from 'plotly.js';
 import { Plot } from '../../components/Plot';
-import { ResultCard } from '../../components/ResultCard';
+
 import { SolveModeSelector } from '../../components/SolveModeSelector';
 import { ValidationNotice } from '../../components/ValidationNotice';
 import {
@@ -9,10 +9,7 @@ import {
   calculateEquivalentPerformance,
   reciprocalRateAt,
 } from '../../lib/comparison/levenspiel';
-import { 
-  solveCSTRSeriesForward, 
-  solveScaledCSTRSeriesForTargetConversion 
-} from '../../lib/reactors/cstrSeries';
+
 import { rate, generateRateCurve } from '../../lib/kinetics/michaelisMenten';
 import { Units, formatNumber } from '../../lib/units/format';
 import { validateSharedInputs } from '../../lib/validation';
@@ -86,11 +83,6 @@ export function InhibitionDashboard() {
 
   const isTargetMode = compareMode === 'target_conversion';
 
-  const baseOutput = validationMessages.length === 0 ? solveCSTRSeriesForward(seriesInput) : null;
-  const targetSeriesOutput = isTargetMode && validationMessages.length === 0 
-    ? solveScaledCSTRSeriesForTargetConversion(seriesInput, compareTargetX) 
-    : null;
-
   const performance = validationMessages.length === 0 
     ? calculateEquivalentPerformance(seriesInput, isTargetMode ? compareTargetX : undefined) 
     : [];
@@ -141,13 +133,6 @@ export function InhibitionDashboard() {
     })) ?? [];
 
   const operatingPointRates = performance.map((row) => reciprocalRateAt(seriesInput, row.a_out));
-  const finiteLevenspielXValues = levenspiel === null ? [] : [
-    ...levenspiel.pfrArea.x,
-    ...levenspiel.cstrArea.x,
-    ...levenspiel.cstrSeriesAreas.flatMap((area) => area.x),
-    ...performance.map((row) => row.a_out),
-    shared.a_in,
-  ].filter((value) => Number.isFinite(value));
 
   const finiteLevenspielYValues = levenspiel === null ? [] : [
     ...levenspiel.pfrArea.y,
@@ -199,7 +184,7 @@ export function InhibitionDashboard() {
         name: 'Single CSTR Area',
         fill: 'toself' as const,
         fillcolor: 'rgba(239, 68, 68, 0.15)',
-        line: { color: '#ef4444', width: 2, dash: 'dash' },
+        line: { color: '#ef4444', width: 2, dash: 'dash' as const },
       },
     ]),
     ...seriesAreaTraces,
@@ -258,21 +243,21 @@ export function InhibitionDashboard() {
   const needsI0 = inhType !== 'none' && !inhType.startsWith('product_') && inhType !== 'substrate';
 
   return (
-    <div className="mx-auto max-w-[1440px] px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900">Inhibition Explorer Dashboard</h2>
-          <p className="mt-1 text-sm text-slate-500">
-            Dynamically adjust inhibition parameters to see exactly how they penalize PFR and CSTR performance differently.
-          </p>
-        </div>
+    <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-slate-900">Inhibition Explorer Dashboard</h2>
+        <p className="mt-1 text-sm text-slate-500">
+          Dynamically adjust inhibition parameters to see exactly how they penalize PFR and CSTR performance differently.
+        </p>
       </div>
 
       <ValidationNotice messages={validationMessages} />
 
-      <div className="grid gap-6 lg:grid-cols-12">
-        {/* Left Panel: Inputs */}
-        <div className="space-y-5 lg:col-span-3">
+      {/* Main 3-column grid */}
+      <div className="grid gap-6 xl:grid-cols-12">
+
+        {/* ── Left Panel: Inputs ── */}
+        <div className="space-y-5 xl:col-span-3 min-w-0">
           <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
             <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-slate-500">
               Reactor Feed
@@ -363,7 +348,6 @@ export function InhibitionDashboard() {
 
                 {inhType !== 'none' && (
                   <div className="rounded-md bg-teal-50 p-3 ring-1 ring-inset ring-teal-500/10">
-                    {/* Competitive Constant */}
                     {needsKIc && (
                       <div className="mb-3 last:mb-0">
                         <label className="mb-1 block text-xs font-semibold text-teal-800">
@@ -379,7 +363,6 @@ export function InhibitionDashboard() {
                       </div>
                     )}
                     
-                    {/* Uncompetitive Constant */}
                     {needsKIu && (
                       <div className="mb-3 last:mb-0">
                         <label className="mb-1 block text-xs font-semibold text-teal-800">
@@ -400,7 +383,6 @@ export function InhibitionDashboard() {
                       </div>
                     )}
 
-                    {/* Impurity Concentration */}
                     {needsI0 && (
                       <div className="mb-3 last:mb-0 pt-2 border-t border-teal-100">
                         <label className="mb-1 block text-xs font-semibold text-teal-800">
@@ -416,7 +398,6 @@ export function InhibitionDashboard() {
                       </div>
                     )}
 
-                    {/* Product Helper */}
                     {inhType.startsWith('product_') && (
                       <p className="text-xs text-teal-700 italic">
                         Inhibitor concentration dynamically calculated as: p = a₀ − a
@@ -485,35 +466,41 @@ export function InhibitionDashboard() {
           </div>
         </div>
 
-        {/* Middle Panel: Levenspiel Plot */}
-        <div className="lg:col-span-5 flex flex-col pt-0 lg:pt-0">
-          <div className="flex-grow rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        {/* ── Middle Panel: Levenspiel Plot ── */}
+        <div className="xl:col-span-5 min-w-0">
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm h-full">
             <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-slate-500">
               Levenspiel Comparison
             </h3>
-            <div className="h-[450px]">
-              <Plot data={levenspielData} layout={levenspielLayout} />
+            <div className="h-[450px] min-w-0">
+              <Plot
+                data={levenspielData}
+                layout={levenspielLayout}
+                useResizeHandler
+                style={{ width: '100%', height: '100%' }}
+                config={{ responsive: true }}
+              />
             </div>
           </div>
         </div>
 
-        {/* Right Panel: Results */}
-        <div className="lg:col-span-4 space-y-4">
-          <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-            <div className="bg-slate-50 p-4 border-b border-slate-200">
+        {/* ── Right Panel: Performance Results ── */}
+        <div className="xl:col-span-4 min-w-0">
+          <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden h-full">
+            <div className="bg-slate-50 px-5 py-4 border-b border-slate-200">
               <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-800">
                 Performance Dashboard
               </h3>
             </div>
             
-            <div className="p-4">
+            <div className="p-5">
               <SolveModeSelector
                 mode={compareMode}
                 onChange={setCompareMode}
                 options={[
                   { 
                     value: 'fixed_tau', 
-                    label: 'Equal Total Volume',
+                    label: 'Equal Volume',
                     description: 'Compare reactors with the same total volume — see resulting conversion.'
                   },
                   { 
@@ -526,42 +513,63 @@ export function InhibitionDashboard() {
               />
 
               {isTargetMode && (
-                <div className="mt-4 flex items-center gap-3">
-                  <label className="text-sm font-medium text-slate-700 w-24">
-                    Target X:
+                <div className="mt-4">
+                  <label className="text-sm font-medium text-slate-700 block mb-2">
+                    Target Conversion (X)
                   </label>
-                  <input
-                    type="range"
-                    min="0.1"
-                    max="0.99"
-                    step="0.01"
-                    value={compareTargetX}
-                    onChange={(e) => setCompareTargetX(parseFloat(e.target.value))}
-                    className="flex-grow accent-teal-600"
-                  />
-                  <div className="w-12 text-right text-sm font-bold text-slate-900 border border-slate-200 rounded px-1.5 py-1 bg-slate-50">
-                    {formatNumber(compareTargetX, 3)}
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min="0.1"
+                      max="0.99"
+                      step="0.01"
+                      value={compareTargetX}
+                      onChange={(e) => setCompareTargetX(parseFloat(e.target.value))}
+                      className="flex-grow accent-teal-600"
+                    />
+                    <div className="w-14 text-center text-sm font-bold text-slate-900 border border-slate-200 rounded px-1.5 py-1 bg-slate-50">
+                      {formatNumber(compareTargetX, 3)}
+                    </div>
                   </div>
                 </div>
               )}
             </div>
 
-            <div className="bg-slate-50 p-4 border-t border-slate-200">
-              <ResultCard
-                title={isTargetMode ? "Volume to Reach Target X" : "Conversion at Equal Total Volume"}
-                results={performance.map((res) => ({
-                  label: res.label,
-                  value: isTargetMode ? res.tau * shared.v_dot : res.X,
-                  unit: isTargetMode ? Units.VOLUME : Units.DIMENSIONLESS,
-                  secondaryValue: res.tau,
-                  secondaryUnit: Units.TIME,
-                  highlight: isTargetMode,
-                }))}
-              />
+            {/* Results Section */}
+            <div className="border-t border-slate-200 p-5">
+              <h4 className="text-sm font-semibold text-slate-700 mb-3">
+                {isTargetMode ? 'Volume to Reach Target X' : 'Conversion at Equal Volume'}
+              </h4>
+              <div className="space-y-3">
+                {performance.map((res, i) => (
+                  <div
+                    key={i}
+                    className="rounded-lg border border-slate-100 bg-gradient-to-br from-white to-slate-50 p-3 shadow-sm"
+                  >
+                    <div className="text-xs font-semibold uppercase tracking-wide text-teal-600 mb-1">
+                      {res.label}
+                    </div>
+                    <div className="flex items-baseline gap-2 flex-wrap">
+                      <span className="text-xl font-bold text-slate-900">
+                        {formatNumber(isTargetMode ? res.tau * shared.v_dot : res.X)}
+                      </span>
+                      <span className="text-sm text-slate-400">
+                        {isTargetMode ? Units.VOLUME : ''}
+                      </span>
+                      <span className="text-xs text-slate-300 mx-1">|</span>
+                      <span className="text-sm text-slate-500">
+                        τ = {formatNumber(res.tau)} {Units.TIME}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
+
       </div>
     </div>
   );
 }
+

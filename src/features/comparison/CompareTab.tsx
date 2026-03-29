@@ -310,7 +310,7 @@ export function CompareTab({
 
           <SolveModeSelector
             mode={compareMode}
-            onChange={(mode) => setCompareMode(mode)}
+            onChange={(mode) => setCompareMode(mode as "fixed_tau" | "target_conversion")}
             options={[
               { value: 'fixed_tau', label: 'Equal Total Volume' },
               { value: 'target_conversion', label: 'Equal Target Conversion' },

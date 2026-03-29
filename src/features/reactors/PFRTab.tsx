@@ -216,7 +216,7 @@ export function PFRTab({
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <SolveModeSelector
             mode={state.solveMode}
-            onChange={(solveMode) => onStateChange({ solveMode })}
+            onChange={(solveMode) => onStateChange({ solveMode: solveMode as any })}
             options={[
               { value: 'forward', label: 'Given τ, find a_out' },
               { value: 'inverse', label: 'Given Target X, find τ' },
