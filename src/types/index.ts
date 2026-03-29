@@ -1,4 +1,9 @@
 /**
+ * Application operating mode for the hub routing.
+ */
+export type AppMode = 'hub' | 'standard' | 'inhibition';
+
+/**
  * The available top-level tabs in the simulator UI.
  */
 export type TabId =
@@ -20,6 +25,19 @@ export type SolveMode = 'forward' | 'inverse';
 export type ReactorType = 'batch' | 'cstr' | 'pfr' | 'cstr-series';
 
 /**
+ * Supported inhibition types.
+ */
+export type InhibitionType =
+  | 'none'
+  | 'competitive'
+  | 'uncompetitive'
+  | 'non-competitive'
+  | 'substrate'
+  | 'product_competitive'
+  | 'product_uncompetitive'
+  | 'product_non-competitive';
+
+/**
  * Kinetic parameters for the Michaelis-Menten rate law.
  */
 export interface KineticParams {
@@ -28,6 +46,10 @@ export interface KineticParams {
   kcat?: number;
   e0?: number;
   useMechanistic: boolean;
+  inhibitionType?: InhibitionType;
+  K_I_c?: number; // Competitive inhibition/dissociation constant
+  K_I_u?: number; // Uncompetitive inhibition/dissociation constant
+  i_0?: number;   // Impurity inhibitor concentration
 }
 
 /**
@@ -73,6 +95,15 @@ export interface SimulatorState {
   cstr: ContinuousFormState;
   pfr: ContinuousFormState;
   cstrSeries: CSTRSeriesFormState;
+}
+
+/**
+ * State for the dedicated Inhibition Hub single-page dashboard.
+ */
+export interface InhibitionState {
+  shared: SharedSimulatorInputs;
+  cstrSeries: CSTRSeriesFormState;
+  compareMode: 'fixed_tau' | 'target_conversion';
 }
 
 /**

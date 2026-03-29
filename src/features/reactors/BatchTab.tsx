@@ -112,7 +112,7 @@ export function BatchTab({
     const yCurve = [];
     for (let i = 1; i <= points; i++) { // Skip 0 to avoid Infinity
       const a_val = i * da;
-      const r = rate(a_val, shared.kinetics);
+      const r = rate(a_val, shared.kinetics, a0);
       if (r > 0) {
         xCurve.push(a_val);
         yCurve.push(1 / r);
@@ -123,18 +123,18 @@ export function BatchTab({
     const yArea = [];
     if (a_end > 0) {
       xArea.push(a_end);
-      yArea.push(1 / rate(a_end, shared.kinetics));
+      yArea.push(1 / rate(a_end, shared.kinetics, a0));
     }
     for (let i = 1; i <= points; i++) {
       const a_val = i * da;
       if (a_val > a_end && a_val < a0) {
         xArea.push(a_val);
-        yArea.push(1 / rate(a_val, shared.kinetics));
+        yArea.push(1 / rate(a_val, shared.kinetics, a0));
       }
     }
     if (a0 > 0 && a0 > a_end) {
       xArea.push(a0);
-      yArea.push(1 / rate(a0, shared.kinetics));
+      yArea.push(1 / rate(a0, shared.kinetics, a0));
     }
 
     levenspielData.push({
@@ -165,7 +165,7 @@ export function BatchTab({
     yaxis: { 
       title: { text: 'Reciprocal Rate 1/v(a)' }, 
       rangemode: 'tozero',
-      range: output ? [0, 1.5 * (1 / rate(output.a_final || 0.001, shared.kinetics))] : undefined
+      range: output ? [0, 1.5 * (1 / rate(output.a_final || 0.001, shared.kinetics, shared.a_in))] : undefined
     },
     showlegend: false,
     autosize: true,
@@ -290,6 +290,7 @@ export function BatchTab({
             'The batch reactor concentration evolves in time, not space.',
             'The required time is the area under the 1/v(a) curve between a0 and a(t).',
             'At very high substrate concentrations (a >> KM), the decay becomes close to zero-order.',
+            'The closed-form design equation shown above is valid for standard (uninhibited) Michaelis-Menten only. Under inhibition, the solver uses numerical integration.',
           ]}
         />
       </div>

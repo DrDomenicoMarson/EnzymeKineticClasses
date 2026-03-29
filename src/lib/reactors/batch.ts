@@ -1,22 +1,39 @@
 import { BatchInput, BatchOutput } from '../../types';
-import { getVmax, rate } from '../kinetics/michaelisMenten';
+import { rate } from '../kinetics/michaelisMenten';
 import { rk4 } from '../solvers/rootFinding';
 
 /**
  * Calculates the required time t to reach a target conversion X in a batch reactor.
- * 
- * Inverse solve based on slide design equation:
- * t(X) = (a0 * X) / Vmax + (KM / Vmax) * ln(1 / (1 - X))
+ *
+ * Uses numerical integration (trapezoidal rule) of 1/v(a) from a(t) to a0,
+ * which is valid for any kinetics including inhibition.
+ * t(X) = integral_{a_out}^{a_0} 1/v(a) da
  */
 export function batchTimeForConversion(input: BatchInput, X_target: number): number {
   if (X_target <= 0) return 0;
-  if (X_target >= 1) return Infinity; // Asymptotically infinite time
+  if (X_target >= 1) return Infinity;
 
   const a0 = input.a0;
-  const Vmax = getVmax(input.kinetics);
-  const KM = input.kinetics.KM;
+  const a_final = a0 * (1 - X_target);
 
-  const t = (a0 * X_target) / Vmax + (KM / Vmax) * Math.log(1 / (1 - X_target));
+  // Numerical integration (Trapezoidal rule)
+  let t = 0;
+  const steps = 1000;
+  const da = (a0 - a_final) / steps;
+
+  for (let i = 0; i < steps; i++) {
+    const a1 = a_final + i * da;
+    const a2 = a_final + (i + 1) * da;
+    const v1 = rate(a1, input.kinetics, a0);
+    const v2 = rate(a2, input.kinetics, a0);
+
+    if (v1 > 0 && v2 > 0) {
+      t += 0.5 * (1 / v1 + 1 / v2) * da;
+    } else {
+      return Infinity;
+    }
+  }
+
   return t;
 }
 
@@ -36,9 +53,9 @@ export function solveBatchForward(input: BatchInput, final_t: number, steps = 10
     };
   }
 
-  // da/dt = -v(a)
+  // da/dt = -v(a), pass a0 for product inhibition
   const deriv = (_t: number, a: number) => {
-    return -rate(a, input.kinetics);
+    return -rate(a, input.kinetics, a0);
   };
 
   const a_trajectory = rk4(deriv, a0, 0, final_t, steps);

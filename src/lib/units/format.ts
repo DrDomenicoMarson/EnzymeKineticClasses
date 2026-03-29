@@ -27,5 +27,6 @@ export const Units = {
   VOLUME: 'L',
   RATE_V: 'mol/(L·min)',
   RATE_KCAT: '1/min',
+  RECIPROCAL_RATE: 'L·min/mol',
   DIMENSIONLESS: ''
 };

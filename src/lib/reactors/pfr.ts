@@ -1,20 +1,36 @@
 import { ContinuousInput, ContinuousOutput } from '../../types';
-import { getVmax, rate } from '../kinetics/michaelisMenten';
+import { rate } from '../kinetics/michaelisMenten';
 import { rk4 } from '../solvers/rootFinding';
 
 /**
- * Computes required tau to reach target X in a PFR.
- * tau(X) = (a_in/Vmax) * X + (KM/Vmax) * ln(1/(1-X))
+ * Computes required tau to reach target X in a PFR numerically.
+ * tau = integral_{a_out}^{a_in} 1/v(a) da
  */
 export function pfrTauForConversion(input: ContinuousInput, X_target: number): number {
   if (X_target <= 0) return 0;
   if (X_target >= 1) return Infinity; 
 
   const a_in = input.a_in;
-  const Vmax = getVmax(input.kinetics);
-  const KM = input.kinetics.KM;
+  const a_out = a_in * (1 - X_target);
+  
+  // Numerical integration (Trapezoidal rule)
+  let tau = 0;
+  const steps = 1000;
+  const da = (a_in - a_out) / steps;
+  
+  for (let i = 0; i < steps; i++) {
+    const a1 = a_out + i * da;
+    const a2 = a_out + (i + 1) * da;
+    const v1 = rate(a1, input.kinetics, a_in);
+    const v2 = rate(a2, input.kinetics, a_in);
+    
+    if (v1 > 0 && v2 > 0) {
+      tau += 0.5 * (1/v1 + 1/v2) * da;
+    } else {
+      return Infinity;
+    }
+  }
 
-  const tau = (a_in / Vmax) * X_target + (KM / Vmax) * Math.log(1 / (1 - X_target));
   return tau;
 }
 
@@ -33,7 +49,7 @@ export function solvePFRForward(input: ContinuousInput, tau: number, steps = 100
 
   // da/dtau = -v(a)
   const deriv = (_t: number, a: number) => {
-    return -rate(a, input.kinetics);
+    return -rate(a, input.kinetics, a_in); // Explicitly pass a_in for product inhibition
   };
 
   const a_trajectory = rk4(deriv, a_in, 0, tau, steps);
@@ -61,7 +77,6 @@ export function solvePFRInverse(input: ContinuousInput, X_target: number): Conti
  * Compute trajectory of a_out vs tau for plotting
  */
 export function generatePFRCurve(input: ContinuousInput, max_tau: number, steps = 100) {
-  // Use RK4 to get the whole curve in one go, much faster
   const a_in = input.a_in;
   const v_dot = input.v_dot;
 
@@ -71,7 +86,7 @@ export function generatePFRCurve(input: ContinuousInput, max_tau: number, steps 
   }
 
   const deriv = (_t: number, a: number) => {
-    return -rate(a, input.kinetics);
+    return -rate(a, input.kinetics, a_in); // Explicitly pass a_in
   };
 
   const a_trajectory = rk4(deriv, a_in, 0, max_tau, steps);

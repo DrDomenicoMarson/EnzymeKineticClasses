@@ -309,11 +309,11 @@ export function CompareTab({
           </div>
 
           <SolveModeSelector
-            mode={compareMode as any}
-            onChange={(mode) => setCompareMode(mode as any)}
+            mode={compareMode}
+            onChange={(mode) => setCompareMode(mode)}
             options={[
-              { value: 'fixed_tau' as any, label: 'Equal Total Volume' },
-              { value: 'target_conversion' as any, label: 'Equal Target Conversion' },
+              { value: 'fixed_tau', label: 'Equal Total Volume' },
+              { value: 'target_conversion', label: 'Equal Target Conversion' },
             ]}
           />
 

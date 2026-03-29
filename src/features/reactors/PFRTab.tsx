@@ -143,7 +143,7 @@ export function PFRTab({
     const yCurve = [];
     for (let i = 1; i <= points; i++) {
       const a_val = i * da;
-      const r = rate(a_val, shared.kinetics);
+      const r = rate(a_val, shared.kinetics, shared.a_in);
       if (r > 0) {
         xCurve.push(a_val);
         yCurve.push(1 / r);
@@ -154,18 +154,18 @@ export function PFRTab({
     const yArea = [];
     if (a_out > 0) {
       xArea.push(a_out);
-      yArea.push(1 / rate(a_out, shared.kinetics));
+      yArea.push(1 / rate(a_out, shared.kinetics, shared.a_in));
     }
     for (let i = 1; i <= points; i++) {
       const a_val = i * da;
       if (a_val > a_out && a_val < a_in) {
         xArea.push(a_val);
-        yArea.push(1 / rate(a_val, shared.kinetics));
+        yArea.push(1 / rate(a_val, shared.kinetics, shared.a_in));
       }
     }
     if (a_in > 0 && a_in > a_out) {
       xArea.push(a_in);
-      yArea.push(1 / rate(a_in, shared.kinetics));
+      yArea.push(1 / rate(a_in, shared.kinetics, shared.a_in));
     }
 
     levenspielData.push({
@@ -196,7 +196,7 @@ export function PFRTab({
     yaxis: { 
       title: { text: 'Reciprocal Rate 1/v(a)' }, 
       rangemode: 'tozero',
-      range: output ? [0, 1.5 * (1 / rate(output.a_out || 0.001, shared.kinetics))] : undefined
+      range: output ? [0, 1.5 * (1 / rate(output.a_out || 0.001, shared.kinetics, shared.a_in))] : undefined
     },
     showlegend: false,
     autosize: true,

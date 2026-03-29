@@ -27,7 +27,8 @@ export function RateLawPanel({
   currentOutlet,
 }: RateLawPanelProps) {
   const maxA = Math.max(maxConcentration * 1.2, kinetics.KM * 3, 1.0);
-  const curve = generateRateCurve(maxA, kinetics, 50);
+  const effectiveInlet = currentInlet ?? maxA;
+  const curve = generateRateCurve(maxA, kinetics, effectiveInlet, 50);
   const markerX: number[] = [];
   const markerY: number[] = [];
   const markerColors: string[] = [];
@@ -35,14 +36,14 @@ export function RateLawPanel({
 
   if (currentInlet !== undefined) {
     markerX.push(currentInlet);
-    markerY.push(rate(currentInlet, kinetics));
+    markerY.push(rate(currentInlet, kinetics, effectiveInlet));
     markerColors.push('#ef4444');
     markerTexts.push('Inlet');
   }
 
   if (currentOutlet !== undefined) {
     markerX.push(currentOutlet);
-    markerY.push(rate(currentOutlet, kinetics));
+    markerY.push(rate(currentOutlet, kinetics, effectiveInlet));
     markerColors.push('#10b981');
     markerTexts.push('Outlet');
   }

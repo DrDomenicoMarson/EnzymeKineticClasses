@@ -143,14 +143,14 @@ export function CSTRTab({
     const yCurve = [];
     for (let i = 1; i <= points; i++) { // Skip 0
       const a_val = i * da;
-      const r = rate(a_val, shared.kinetics);
+      const r = rate(a_val, shared.kinetics, shared.a_in);
       if (r > 0) {
         xCurve.push(a_val);
         yCurve.push(1 / r);
       }
     }
 
-    const rec_rate_out = 1 / rate(a_out, shared.kinetics);
+    const rec_rate_out = 1 / rate(a_out, shared.kinetics, shared.a_in);
 
     levenspielData.push({
       x: xCurve,
@@ -180,7 +180,7 @@ export function CSTRTab({
     yaxis: { 
       title: { text: 'Reciprocal Rate 1/v(a)' }, 
       rangemode: 'tozero',
-      range: output ? [0, 1.5 * (1 / rate(output.a_out || 0.001, shared.kinetics))] : undefined
+      range: output ? [0, 1.5 * (1 / rate(output.a_out || 0.001, shared.kinetics, shared.a_in))] : undefined
     },
     showlegend: false,
     autosize: true,

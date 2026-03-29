@@ -1,62 +1,54 @@
 import { ContinuousInput, ContinuousOutput } from '../../types';
-import { getVmax } from '../kinetics/michaelisMenten';
-
+import { rate } from '../kinetics/michaelisMenten';
+import { bisection } from '../solvers/rootFinding';
 
 /**
  * Computes required tau to reach target X in a perfectly mixed CSTR.
- * tau(X) = (a_in/Vmax) * X + (KM/Vmax) * (X / (1-X))
+ * tau(X) = (a_in - a_out) / v(a_out)
  */
 export function cstrTauForConversion(input: ContinuousInput, X_target: number): number {
   if (X_target <= 0) return 0;
-  if (X_target >= 1) return Infinity; // Asymptotically infinite time
+  if (X_target >= 1) return Infinity;
 
   const a_in = input.a_in;
-  const Vmax = getVmax(input.kinetics);
-  const KM = input.kinetics.KM;
+  const a_out = a_in * (1 - X_target);
+  
+  // Provide a_in as the 3rd argument for product inhibition to calculate correctly
+  const currentRate = rate(a_out, input.kinetics, a_in);
+  
+  // If the rate is zero, it takes infinite time
+  if (currentRate <= 0) return Infinity;
 
-  const tau = (a_in / Vmax) * X_target + (KM / Vmax) * (X_target / (1 - X_target));
-  return tau;
+  return (a_in - a_out) / currentRate;
 }
 
 /**
  * Forward solve for a CSTR given an inlet and tau.
- * It solves the quadratic equation for a_out:
- * tau = (a_in - a_out) / v(a_out) = (a_in - a_out) / (Vmax * a_out / (KM + a_out))
- * Rearranges to quadratic in a_out.
+ * It solves the mass balance equation numerically for a_out using bisection:
+ * f(a_out) = a_in - a_out - tau * v(a_out) = 0
  */
 export function solveCSTRForward(input: ContinuousInput, tau: number): ContinuousOutput {
-  const a_in = input.a_in;
-  const Vmax = getVmax(input.kinetics);
-  const KM = input.kinetics.KM;
-  const v_dot = input.v_dot;
+  const { a_in, v_dot, kinetics } = input;
   const V = tau * v_dot;
 
   if (tau <= 0) {
     return { a_out: a_in, X: 0, V: 0, tau: 0 };
   }
 
-  // Quadratic coefficients for A*x^2 + B*x + C = 0 where x = a_out
-  // a_in - a_out = tau * Vmax * a_out / (KM + a_out)
-  // (a_in - a_out) * (KM + a_out) = tau * Vmax * a_out
-  // a_in*KM + a_in*a_out - a_out*KM - a_out^2 = tau*Vmax*a_out
-  // a_out^2 + (KM - a_in + tau*Vmax) * a_out - a_in * KM = 0
-  
-  const A = 1;
-  const B = KM - a_in + tau * Vmax;
-  const C = -a_in * KM;
+  // The objective function: f(a_out) = 0
+  // Note: we must pass a_in to rate() to support Product Inhibition internally
+  const objective = (a_out: number) => a_in - a_out - tau * rate(a_out, kinetics, a_in);
 
-  const discriminant = B * B - 4 * A * C;
-  if (discriminant < 0) {
-    // Should not happen for physical parameters
-    return { a_out: a_in, X: 0, V, tau };
+  // Use bisection to find the root between bounds [0, a_in]
+  let a_out = bisection(objective, 0, a_in, 1e-7, 100);
+
+  // Fallback to boundaries if solver fails
+  if (a_out === null) {
+      if (objective(0) > 0) a_out = 0; // The whole curve is positive
+      else a_out = a_in; // The whole curve is negative
   }
 
-  // Positive root for positive concentration
-  const a_out1 = (-B + Math.sqrt(discriminant)) / (2 * A);
-  const a_out2 = (-B - Math.sqrt(discriminant)) / (2 * A);
-  
-  let a_out = a_out1 >= 0 && a_out1 <= a_in ? a_out1 : a_out2;
-  
+  // Clamp non-physical precision noise
   if (a_out < 0) a_out = 0;
   if (a_out > a_in) a_out = a_in;
 
@@ -69,7 +61,7 @@ export function solveCSTRForward(input: ContinuousInput, tau: number): Continuou
  * Inverse solve for CSTR given a target X.
  */
 export function solveCSTRInverse(input: ContinuousInput, X_target: number): ContinuousOutput {
-  const X = Math.min(Math.max(X_target, 0), 0.999); // avoid infinity
+  const X = Math.min(Math.max(X_target, 0), 0.999);
   const tau = cstrTauForConversion(input, X);
   const V = tau * input.v_dot;
   const a_out = input.a_in * (1 - X);

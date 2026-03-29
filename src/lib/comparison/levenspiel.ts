@@ -13,7 +13,7 @@ import {
   solveScaledCSTRSeriesForTargetConversion,
 } from '../reactors/cstrSeries';
 import { pfrTauForConversion, solvePFRForward } from '../reactors/pfr';
-import { getVmax, rate } from '../kinetics/michaelisMenten';
+import { rate } from '../kinetics/michaelisMenten';
 
 const PFR_FILL = 'rgba(34, 197, 94, 0.28)';
 const CSTR_FILL = 'rgba(239, 68, 68, 0.18)';
@@ -234,9 +234,10 @@ export function generateLevenspielCurve(
 
   for (let index = 0; index <= steps; index += 1) {
     const a = (index / steps) * safeMaxConcentration;
+    const currentRate = rate(Math.max(a, 1e-6), input.kinetics, input.a_in);
     curve.push({
       a,
-      reciprocalRate: reciprocalRateAt(input, a),
+      reciprocalRate: currentRate > 0 ? 1 / currentRate : Number.POSITIVE_INFINITY,
     });
   }
 
@@ -254,11 +255,10 @@ export function reciprocalRateAt(
   input: CSTRSeriesInput,
   concentration: number,
 ): number {
-  const vmax = getVmax(input.kinetics);
   const safeConcentration = Math.max(concentration, 1e-6);
-  const currentRate = rate(safeConcentration, input.kinetics);
+  const currentRate = rate(safeConcentration, input.kinetics, input.a_in);
 
-  if (vmax <= 0 || currentRate <= 0) {
+  if (currentRate <= 0) {
     return Number.POSITIVE_INFINITY;
   }
 
