@@ -1,0 +1,35 @@
+{
+  "name": "enzyme-external-factors",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && npm run build:web && npm run build:standalone:bundle && node scripts/buildStandalone.mjs",
+    "build:web": "vite build",
+    "build:standalone": "tsc -b && npm run build:standalone:bundle && node scripts/buildStandalone.mjs",
+    "build:standalone:bundle": "vite build --mode standalone",
+    "test": "vitest run",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@types/katex": "^0.16.8",
+    "@types/react-plotly.js": "^2.6.4",
+    "katex": "^0.16.38",
+    "plotly.js-dist-min": "^3.4.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-plotly.js": "^2.6.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.2.1",
+    "@types/node": "^24.12.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.0",
+    "tailwindcss": "^4.2.1",
+    "typescript": "~5.9.3",
+    "vite": "^8.0.0",
+    "vitest": "^4.1.0"
+  }
+}
